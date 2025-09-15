@@ -123,7 +123,7 @@ export default function MarketplacePage() {
               <h1 className="text-3xl font-bold">Marketplace de Proyectos</h1>
               <p className="text-muted-foreground">Descubre y invierte en proyectos inmobiliarios tokenizados</p>
             </div>
-            <ConnectBar />
+              <ConnectBar />
           </div>
         </div>
 

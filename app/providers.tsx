@@ -18,12 +18,12 @@ const queryClient = new QueryClient({
 })
 
 const client = createThirdwebClient({
-  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || "",
+  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID,
 })
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThirdwebProvider>
+    <ThirdwebProvider client={client}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
