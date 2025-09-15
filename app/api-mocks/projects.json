@@ -1,0 +1,188 @@
+{
+  "proyectos": [
+    {
+      "id": "proj-001",
+      "proyecto_descripcion_id": "desc-001",
+      "emisor_id": "emisor-001",
+      "desarrollador_id": "dev-001",
+      "auditor_id": "audit-001",
+      "chainId": 137,
+      "contractAddress": "0x1234567890123456789012345678901234567890",
+      "moneda": "USDC",
+      "monto_total": "1000000",
+      "monto_minimo": "500000",
+      "ticket_minimo": "1000",
+      "cantidad_etapas": 4,
+      "renta_garantizada": "12-15%",
+      "plazo_renta": "24 meses",
+      "estado": "RECAUDACION",
+      "approvalPolicy": "EMISOR+AUDITOR",
+      "createdAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "proj-002",
+      "proyecto_descripcion_id": "desc-002",
+      "emisor_id": "emisor-001",
+      "desarrollador_id": "dev-002",
+      "auditor_id": "audit-001",
+      "chainId": 137,
+      "contractAddress": "0x2345678901234567890123456789012345678901",
+      "moneda": "USDC",
+      "monto_total": "750000",
+      "monto_minimo": "400000",
+      "ticket_minimo": "500",
+      "cantidad_etapas": 3,
+      "renta_garantizada": "10-14%",
+      "plazo_renta": "18 meses",
+      "estado": "EN_EJECUCION",
+      "approvalPolicy": "AUDITOR_SOLO",
+      "createdAt": "2024-01-10T10:00:00Z"
+    }
+  ],
+  "proyectos_descripcion": [
+    {
+      "id": "desc-001",
+      "descripcion": "Complejo residencial de 120 unidades en zona premium de Palermo, Buenos Aires. Proyecto sustentable con amenities de primera clase.",
+      "direccion": "Av. Santa Fe 3500, Palermo, CABA",
+      "organizador": "Constructora Premium SA",
+      "rentabilidad_esperada": "12-16%",
+      "renta_garantizada": "Sí, 12% anual mínimo",
+      "plazo_renta": "24 meses",
+      "estado_actual_obra": "Excavación completada, iniciando fundaciones",
+      "mediaUrls": ["/placeholder.svg?height=300&width=400", "/placeholder.svg?height=300&width=400"]
+    },
+    {
+      "id": "desc-002",
+      "descripcion": "Torre de oficinas AAA en Puerto Madero con certificación LEED. 25 pisos con vista al río.",
+      "direccion": "Juana Manso 555, Puerto Madero, CABA",
+      "organizador": "Desarrollos Urbanos SRL",
+      "rentabilidad_esperada": "10-14%",
+      "renta_garantizada": "No garantizada",
+      "plazo_renta": "18 meses",
+      "estado_actual_obra": "Estructura en piso 15",
+      "mediaUrls": ["/placeholder.svg?height=300&width=400", "/placeholder.svg?height=300&width=400"]
+    }
+  ],
+  "actores": {
+    "emisores": [
+      {
+        "id": "emisor-001",
+        "nombre": "BrickChain Capital",
+        "descripcion": "Emisor especializado en tokenización inmobiliaria",
+        "address": "0xabcdef1234567890abcdef1234567890abcdef12"
+      }
+    ],
+    "desarrolladores": [
+      {
+        "id": "dev-001",
+        "nombre": "Constructora Premium SA",
+        "descripcion": "25 años de experiencia en desarrollos residenciales",
+        "address": "0xfedcba0987654321fedcba0987654321fedcba09"
+      },
+      {
+        "id": "dev-002",
+        "nombre": "Desarrollos Urbanos SRL",
+        "descripcion": "Especialistas en torres corporativas",
+        "address": "0x1122334455667788112233445566778811223344"
+      }
+    ],
+    "auditores": [
+      {
+        "id": "audit-001",
+        "nombre": "PropTech Auditors",
+        "descripcion": "Auditores certificados en construcción y blockchain",
+        "address": "0x9988776655443322998877665544332299887766"
+      }
+    ]
+  },
+  "hitos": [
+    {
+      "id": "hito-001-1",
+      "proyecto_id": "proj-001",
+      "nro_hito": 1,
+      "descripcion": "Excavación y fundaciones",
+      "imagenes": ["/placeholder.svg?height=200&width=300"],
+      "evidencia_uri": "ipfs://QmExampleHash1",
+      "fecha_limite": "2024-03-15T23:59:59Z",
+      "porcentaje_presupuesto": 25,
+      "estado": "APROBADO"
+    },
+    {
+      "id": "hito-001-2",
+      "proyecto_id": "proj-001",
+      "nro_hito": 2,
+      "descripcion": "Estructura hasta piso 10",
+      "imagenes": [],
+      "evidencia_uri": null,
+      "fecha_limite": "2024-06-15T23:59:59Z",
+      "porcentaje_presupuesto": 35,
+      "estado": "EN_REVISION"
+    },
+    {
+      "id": "hito-001-3",
+      "proyecto_id": "proj-001",
+      "nro_hito": 3,
+      "descripcion": "Terminaciones y amenities",
+      "imagenes": [],
+      "evidencia_uri": null,
+      "fecha_limite": "2024-09-15T23:59:59Z",
+      "porcentaje_presupuesto": 25,
+      "estado": "PENDIENTE"
+    },
+    {
+      "id": "hito-001-4",
+      "proyecto_id": "proj-001",
+      "nro_hito": 4,
+      "descripcion": "Entrega final y escrituración",
+      "imagenes": [],
+      "evidencia_uri": null,
+      "fecha_limite": "2024-12-15T23:59:59Z",
+      "porcentaje_presupuesto": 15,
+      "estado": "PENDIENTE"
+    }
+  ],
+  "aprobaciones": [
+    {
+      "id": "aprov-001",
+      "hito_id": "hito-001-1",
+      "id_auditor": "audit-001",
+      "id_desarrollador": null,
+      "id_emisor": "emisor-001",
+      "resultado": "APROBADO",
+      "comentario": "Excavación completada según especificaciones",
+      "tx_hash": "0xabcd1234567890abcd1234567890abcd12345678",
+      "fecha": "2024-03-10T14:30:00Z"
+    }
+  ],
+  "desembolsos": [
+    {
+      "id": "desemb-001",
+      "hito_id": "hito-001-1",
+      "monto": "250000",
+      "moneda": "USDC",
+      "tx_release": "0xefgh5678901234efgh5678901234efgh56789012",
+      "fecha": "2024-03-11T10:00:00Z"
+    }
+  ],
+  "aportes": [
+    {
+      "id": "aporte-001",
+      "inversor_id": "inv-001",
+      "proyecto_id": "proj-001",
+      "monto": "5000",
+      "moneda": "USDC",
+      "tx_hash": "0x1111222233334444111122223333444411112222",
+      "fecha": "2024-02-01T12:00:00Z",
+      "estado": "CONFIRMADO"
+    }
+  ],
+  "inversores": [
+    {
+      "id": "inv-001",
+      "nombre": "Juan Pérez",
+      "descripcion": "Inversor individual",
+      "address": "0x5555666677778888555566667777888855556666",
+      "kyc_status": "APROBADO"
+    }
+  ]
+}
