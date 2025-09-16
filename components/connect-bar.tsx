@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Wallet, Shield, AlertTriangle, CheckCircle } from "lucide-react"
 import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
 import { client } from "@/app/providers"
+import { walletConnect } from "thirdweb/wallets"
+import { polygon, polygonAmoy } from "@/lib/chains"
 
 export function ConnectBar() {
   const {
@@ -64,6 +66,8 @@ export function ConnectBar() {
 
           <ConnectButton
             client={client}
+            wallets={[walletConnect()]}
+            chains={[polygon, polygonAmoy]}
             theme="light"
             connectButton={{
               label: "Conectar Wallet",
