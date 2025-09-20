@@ -46,23 +46,11 @@ export class Web3Service {
   // Projects
   async getProjects(): Promise<ProjectCard[]> {
     if (USE_MOCKS) {
-      // Return mock data
-      return [
-        {
-          projectId: "proj-001",
-          name: "Complejo Residencial Palermo",
-          coverUrl: "/modern-residential-building-palermo.jpg",
-          city: "Buenos Aires",
-          estado: "RECAUDACION",
-          softCap: "500000",
-          hardCap: "1000000",
-          raised: "650000",
-          minTicket: "1000",
-          roiEst: "12-16%",
-          chainId: 137,
-          contractAddress: "0x1234567890123456789012345678901234567890",
-        },
-      ]
+      const response = await fetch("/api/projects")
+      if (!response.ok) {
+        throw new Error("Failed to fetch projects")
+      }
+      return response.json()
     }
 
     const projects = await readContract({
@@ -85,68 +73,12 @@ export class Web3Service {
 
   async getProject(projectId: string): Promise<ProjectDetail | null> {
     if (USE_MOCKS) {
-      // Return mock detailed project data
-      const mockProject = {
-        projectId,
-        name: "Complejo Residencial Palermo",
-        coverUrl: "/modern-residential-building-palermo.jpg",
-        city: "Buenos Aires",
-        estado: "RECAUDACION" as const,
-        softCap: "500000",
-        hardCap: "1000000",
-        raised: "650000",
-        minTicket: "1000",
-        roiEst: "12-16%",
-        chainId: 137,
-        contractAddress: "0x1234567890123456789012345678901234567890" as const,
-        descripcion: {
-          id: "desc-001",
-          descripcion: "Complejo residencial de 120 unidades en zona premium de Palermo",
-          direccion: "Av. Santa Fe 3500, Palermo, CABA",
-          organizador: "Constructora Premium SA",
-          rentabilidad_esperada: "12-16%",
-          renta_garantizada: "Sí, 12% anual mínimo",
-          plazo_renta: "24 meses",
-          estado_actual_obra: "Excavación completada, iniciando fundaciones",
-        },
-        proyecto: {
-          id: projectId,
-          proyecto_descripcion_id: "desc-001",
-          emisor_id: "emisor-001",
-          desarrollador_id: "dev-001",
-          auditor_id: "audit-001",
-          chainId: 137,
-          contractAddress: "0x1234567890123456789012345678901234567890" as const,
-          moneda: "USDC" as const,
-          monto_total: "1000000",
-          monto_minimo: "500000",
-          ticket_minimo: "1000",
-          cantidad_etapas: 4,
-          estado: "RECAUDACION" as const,
-          approvalPolicy: "EMISOR+AUDITOR" as const,
-        },
-        actores: {
-          emisor: {
-            id: "emisor-001",
-            nombre: "BrickChain Capital",
-            address: "0xabcd..." as const,
-          },
-          desarrollador: {
-            id: "dev-001",
-            nombre: "Constructora Premium SA",
-            address: "0xefgh..." as const,
-          },
-          auditor: {
-            id: "audit-001",
-            nombre: "PropTech Auditors",
-            address: "0xijkl..." as const,
-          },
-        },
-        investors: 45,
-        hitos: [],
-        events: [],
+      const response = await fetch(`/api/projects/${projectId}`)
+      if (!response.ok) {
+        if (response.status === 404) return null
+        throw new Error("Failed to fetch project")
       }
-      return mockProject
+      return response.json()
     }
 
     const project = await readContract({
@@ -161,8 +93,34 @@ export class Web3Service {
   // Investment functions
   async invest(projectId: string, amount: string, wallet: any): Promise<string> {
     if (USE_MOCKS) {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      return "0xMOCKTXHASH"
+      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`
+
+      // Record investment via API
+      await fetch("/api/investments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          investorAddress: wallet.address,
+          projectId,
+          amount,
+          txHash,
+        }),
+      })
+
+      // Simulate transaction confirmation after delay
+      setTimeout(async () => {
+        await fetch("/api/investments", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            txHash,
+            status: "CONFIRMADO",
+          }),
+        })
+        this.invalidateQueries(["projects", "project"])
+      }, 3000)
+
+      return txHash
     }
 
     const transaction = prepareContractCall({
@@ -180,11 +138,19 @@ export class Web3Service {
     return result.transactionHash
   }
 
-  // Milestone functions
   async submitEvidence(projectId: string, milestoneId: string, evidenceUri: string, wallet: any): Promise<string> {
     if (USE_MOCKS) {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      return "0xMOCKEVIDENCETX"
+      await fetch("/api/milestones/evidence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          milestoneId,
+          evidenceUri,
+        }),
+      })
+      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`
+      return txHash
     }
 
     const transaction = prepareContractCall({
@@ -203,8 +169,18 @@ export class Web3Service {
 
   async approveMilestone(projectId: string, milestoneId: string, wallet: any): Promise<string> {
     if (USE_MOCKS) {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      return "0xMOCKAPPROVETX"
+      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`
+      await fetch("/api/milestones/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          milestoneId,
+          approverAddress: wallet.address,
+          txHash,
+        }),
+      })
+      return txHash
     }
 
     const transaction = prepareContractCall({
@@ -223,8 +199,19 @@ export class Web3Service {
 
   async rejectMilestone(projectId: string, milestoneId: string, reason: string, wallet: any): Promise<string> {
     if (USE_MOCKS) {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      return "0xMOCKREJECTTX"
+      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`
+      await fetch("/api/milestones/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          milestoneId,
+          reason,
+          approverAddress: wallet.address,
+          txHash,
+        }),
+      })
+      return txHash
     }
 
     const transaction = prepareContractCall({
@@ -395,11 +382,15 @@ export function useUserRole(address?: string) {
     queryKey: ["userRole", address],
     queryFn: async () => {
       if (USE_MOCKS) {
-        // Mock role based on address
-        if (address?.toLowerCase().includes("admin")) return "admin"
-        if (address?.toLowerCase().includes("audit")) return "auditor"
-        if (address?.toLowerCase().includes("dev")) return "desarrollador"
-        return "investor"
+        if (!address) return null
+
+        // Use API route for database access
+        const response = await fetch(`/api/user/${address}/role`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch user role")
+        }
+        const data = await response.json()
+        return data.role
       }
 
       if (!address) return null

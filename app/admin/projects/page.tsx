@@ -10,55 +10,12 @@ import { RoleGuard } from "@/components/role-guard"
 import { DataTable } from "@/components/data-table"
 import { Building, Plus, Search, Edit, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
-
-// Mock data
-const mockProjects = [
-  {
-    id: "proj-001",
-    proyecto_descripcion_id: "desc-001",
-    emisor_id: "emisor-001",
-    desarrollador_id: "dev-001",
-    auditor_id: "audit-001",
-    chainId: 137,
-    contractAddress: "0x1234567890123456789012345678901234567890" as const,
-    moneda: "USDC" as const,
-    monto_total: "1000000",
-    monto_minimo: "500000",
-    ticket_minimo: "1000",
-    cantidad_etapas: 4,
-    renta_garantizada: "12-15%",
-    plazo_renta: "24 meses",
-    estado: "RECAUDACION" as const,
-    approvalPolicy: "EMISOR+AUDITOR" as const,
-    createdAt: "2024-01-15T10:00:00Z",
-    name: "Complejo Residencial Palermo",
-    raised: "650000",
-  },
-  {
-    id: "proj-002",
-    proyecto_descripcion_id: "desc-002",
-    emisor_id: "emisor-001",
-    desarrollador_id: "dev-002",
-    auditor_id: "audit-001",
-    chainId: 137,
-    contractAddress: "0x2345678901234567890123456789012345678901" as const,
-    moneda: "USDC" as const,
-    monto_total: "750000",
-    monto_minimo: "400000",
-    ticket_minimo: "500",
-    cantidad_etapas: 3,
-    renta_garantizada: "10-14%",
-    plazo_renta: "18 meses",
-    estado: "EN_EJECUCION" as const,
-    approvalPolicy: "AUDITOR_SOLO" as const,
-    createdAt: "2024-01-10T10:00:00Z",
-    name: "Torre Corporativa Puerto Madero",
-    raised: "750000",
-  },
-]
+import { useProjects } from "@/lib/hooks/use-projects"
 
 export default function AdminProjectsPage() {
   const [searchTerm, setSearchTerm] = useState("")
+
+  const { data: projects, isLoading, error } = useProjects()
 
   const getStatusColor = (estado: string) => {
     switch (estado) {
@@ -81,7 +38,7 @@ export default function AdminProjectsPage() {
       accessorKey: "name",
       cell: ({ row }: any) => (
         <div>
-          <div className="font-medium">{row.original.name}</div>
+          <div className="font-medium">{row.original.descripcion?.titulo || row.original.name || "Sin título"}</div>
           <div className="text-sm text-muted-foreground">ID: {row.original.id}</div>
         </div>
       ),
@@ -95,12 +52,13 @@ export default function AdminProjectsPage() {
       header: "Financiamiento",
       accessorKey: "funding",
       cell: ({ row }: any) => {
-        const progress = (Number.parseFloat(row.original.raised) / Number.parseFloat(row.original.monto_total)) * 100
+        const raised = Number.parseFloat(row.original.raised || "0")
+        const total = Number.parseFloat(row.original.monto_total || "0")
+        const progress = total > 0 ? (raised / total) * 100 : 0
         return (
           <div>
             <div className="text-sm font-medium">
-              ${Number.parseFloat(row.original.raised).toLocaleString()} / $
-              {Number.parseFloat(row.original.monto_total).toLocaleString()}
+              ${raised.toLocaleString()} / ${total.toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">{progress.toFixed(1)}% completado</div>
           </div>
@@ -140,9 +98,25 @@ export default function AdminProjectsPage() {
     },
   ]
 
-  const filteredProjects = mockProjects.filter((project) =>
-    project.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredProjects = (projects || []).filter((project: any) =>
+    (project.descripcion?.titulo || project.name || "").toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  if (isLoading) {
+    return (
+      <RoleGuard requiredRole="admin" userRole="admin">
+        <div className="min-h-screen bg-background">
+          <div className="max-w-7xl mx-auto p-6 space-y-6">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-muted rounded w-1/3" />
+              <div className="h-48 bg-muted rounded" />
+              <div className="h-96 bg-muted rounded" />
+            </div>
+          </div>
+        </div>
+      </RoleGuard>
+    )
+  }
 
   return (
     <RoleGuard requiredRole="admin" userRole="admin">
@@ -191,7 +165,16 @@ export default function AdminProjectsPage() {
               <CardTitle>Proyectos ({filteredProjects.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <DataTable columns={columns} data={filteredProjects} />
+              {error ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Error al cargar proyectos</p>
+                  <Button onClick={() => window.location.reload()} className="mt-2">
+                    Reintentar
+                  </Button>
+                </div>
+              ) : (
+                <DataTable columns={columns} data={filteredProjects} />
+              )}
             </CardContent>
           </Card>
         </div>

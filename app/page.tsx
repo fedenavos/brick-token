@@ -1,11 +1,53 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Building, TrendingUp, Shield, Users, Mail } from "lucide-react";
-import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Building, TrendingUp, Shield, Users, Mail } from "lucide-react"
+import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
-export default function HomePage() {
+async function getProjectStats() {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/projects`, {
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch")
+    }
+
+    const projects = await response.json()
+
+    const totalProjects = projects.length
+    const totalTokenized = projects.reduce((sum: number, p: any) => sum + Number.parseFloat(p.raised || "0"), 0)
+    const activeInvestors = projects.reduce((sum: number, p: any) => sum + (p.investors || 0), 0)
+    const averageROI =
+      projects.length > 0
+        ? projects.reduce((sum: number, p: any) => {
+            const roi = p.descripcion?.rentabilidad_esperada || "0%"
+            return sum + Number.parseFloat(roi.replace("%", ""))
+          }, 0) / projects.length
+        : 0
+
+    return {
+      totalProjects,
+      totalTokenized,
+      activeInvestors,
+      averageROI,
+    }
+  } catch (error) {
+    // Fallback to default values if API fails
+    return {
+      totalProjects: 0,
+      totalTokenized: 0,
+      activeInvestors: 0,
+      averageROI: 0,
+    }
+  }
+}
+
+export default async function HomePage() {
+  const stats = await getProjectStats()
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Hero Section */}
@@ -13,13 +55,11 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto text-center space-y-8">
           <div className="space-y-4">
             <h1 className="text-4xl md:text-6xl font-bold text-balance">
-              Lanza tu plataforma de{" "}
-              <span className="text-primary">tokenización inmobiliaria</span>
+              Lanza tu plataforma de <span className="text-primary">tokenización inmobiliaria</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-balance">
-              BrickForge te permite crear y gestionar tu propia plataforma de
-              tokenización de bienes raíces con tecnología blockchain de última
-              generación
+              BrickForge te permite crear y gestionar tu propia plataforma de tokenización de bienes raíces con
+              tecnología blockchain de última generación
             </p>
           </div>
 
@@ -27,12 +67,7 @@ export default function HomePage() {
             <Button asChild size="lg" className="text-lg px-8">
               <Link href="/marketplace">Ver Proyectos</Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 bg-transparent"
-            >
+            <Button asChild variant="outline" size="lg" className="text-lg px-8 bg-transparent">
               <Link href="#contacto">Solicitar Demo</Link>
             </Button>
           </div>
@@ -41,35 +76,29 @@ export default function HomePage() {
             <Card>
               <CardContent className="p-6 text-center">
                 <Building className="h-8 w-8 text-primary mx-auto mb-2" />
-                <div className="text-2xl font-bold">10+</div>
-                <div className="text-sm text-muted-foreground">
-                  Proyectos Activos
-                </div>
+                <div className="text-2xl font-bold">{stats.totalProjects}+</div>
+                <div className="text-sm text-muted-foreground">Proyectos Activos</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
                 <TrendingUp className="h-8 w-8 text-secondary-foreground mx-auto mb-2" />
-                <div className="text-2xl font-bold">$25M+</div>
+                <div className="text-2xl font-bold">${(stats.totalTokenized / 1000000).toFixed(1)}M+</div>
                 <div className="text-sm text-muted-foreground">Tokenizado</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
                 <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-                <div className="text-2xl font-bold">100+</div>
-                <div className="text-sm text-muted-foreground">
-                  Inversores Activos
-                </div>
+                <div className="text-2xl font-bold">{stats.activeInvestors}+</div>
+                <div className="text-sm text-muted-foreground">Inversores Activos</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
                 <Shield className="h-8 w-8 text-secondary-foreground mx-auto mb-2" />
-                <div className="text-2xl font-bold">14.2%</div>
-                <div className="text-sm text-muted-foreground">
-                  ROI Promedio
-                </div>
+                <div className="text-2xl font-bold">{stats.averageROI.toFixed(1)}%</div>
+                <div className="text-sm text-muted-foreground">ROI Promedio</div>
               </CardContent>
             </Card>
           </div>
@@ -80,12 +109,9 @@ export default function HomePage() {
       <section className="py-20 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold">
-              ¿Por qué elegir BrickForge?
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold">¿Por qué elegir BrickForge?</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
-              La plataforma más completa para crear tu ecosistema de
-              tokenización inmobiliaria
+              La plataforma más completa para crear tu ecosistema de tokenización inmobiliaria
             </p>
           </div>
 
@@ -93,12 +119,9 @@ export default function HomePage() {
             <Card className="text-center">
               <CardContent className="p-8">
                 <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-3">
-                  Tecnología Probada
-                </h3>
+                <h3 className="text-xl font-semibold mb-3">Tecnología Probada</h3>
                 <p className="text-muted-foreground">
-                  Smart contracts auditados y arquitectura escalable para
-                  manejar millones en tokenización
+                  Smart contracts auditados y arquitectura escalable para manejar millones en tokenización
                 </p>
               </CardContent>
             </Card>
@@ -106,12 +129,9 @@ export default function HomePage() {
             <Card className="text-center">
               <CardContent className="p-8">
                 <TrendingUp className="h-12 w-12 text-secondary-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-3">
-                  Lanzamiento Rápido
-                </h3>
+                <h3 className="text-xl font-semibold mb-3">Lanzamiento Rápido</h3>
                 <p className="text-muted-foreground">
-                  Desde concepto hasta plataforma funcionando en menos de 30
-                  días con soporte completo
+                  Desde concepto hasta plataforma funcionando en menos de 30 días con soporte completo
                 </p>
               </CardContent>
             </Card>
@@ -119,12 +139,9 @@ export default function HomePage() {
             <Card className="text-center">
               <CardContent className="p-8">
                 <Building className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-3">
-                  Personalización Total
-                </h3>
+                <h3 className="text-xl font-semibold mb-3">Personalización Total</h3>
                 <p className="text-muted-foreground">
-                  Adapta cada aspecto de la plataforma a tu marca y necesidades
-                  específicas
+                  Adapta cada aspecto de la plataforma a tu marca y necesidades específicas
                 </p>
               </CardContent>
             </Card>
@@ -135,12 +152,9 @@ export default function HomePage() {
       <section id="contacto" className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">
-              Lanza tu plataforma de tokenización hoy
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Lanza tu plataforma de tokenización hoy</h2>
             <p className="text-xl text-muted-foreground text-balance">
-              Completa el formulario y nuestro equipo te contactará en menos de
-              24 horas
+              Completa el formulario y nuestro equipo te contactará en menos de 24 horas
             </p>
           </div>
 
@@ -150,19 +164,13 @@ export default function HomePage() {
                 <form className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label
-                        htmlFor="nombre"
-                        className="block text-sm font-medium mb-2"
-                      >
+                      <label htmlFor="nombre" className="block text-sm font-medium mb-2">
                         Nombre *
                       </label>
                       <Input id="nombre" placeholder="Tu nombre" required />
                     </div>
                     <div>
-                      <label
-                        htmlFor="apellido"
-                        className="block text-sm font-medium mb-2"
-                      >
+                      <label htmlFor="apellido" className="block text-sm font-medium mb-2">
                         Apellido *
                       </label>
                       <Input id="apellido" placeholder="Tu apellido" required />
@@ -170,45 +178,28 @@ export default function HomePage() {
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium mb-2"
-                    >
+                    <label htmlFor="email" className="block text-sm font-medium mb-2">
                       Email *
                     </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      required
-                    />
+                    <Input id="email" type="email" placeholder="tu@email.com" required />
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="empresa"
-                      className="block text-sm font-medium mb-2"
-                    >
+                    <label htmlFor="empresa" className="block text-sm font-medium mb-2">
                       Empresa
                     </label>
                     <Input id="empresa" placeholder="Nombre de tu empresa" />
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="telefono"
-                      className="block text-sm font-medium mb-2"
-                    >
+                    <label htmlFor="telefono" className="block text-sm font-medium mb-2">
                       Teléfono
                     </label>
                     <Input id="telefono" placeholder="+1 (555) 123-4567" />
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="mensaje"
-                      className="block text-sm font-medium mb-2"
-                    >
+                    <label htmlFor="mensaje" className="block text-sm font-medium mb-2">
                       Cuéntanos sobre tu proyecto *
                     </label>
                     <Textarea
@@ -228,13 +219,10 @@ export default function HomePage() {
 
             <div className="space-y-8">
               <div>
-                <h3 className="text-2xl font-semibold mb-6">
-                  Hablemos de tu proyecto
-                </h3>
+                <h3 className="text-2xl font-semibold mb-6">Hablemos de tu proyecto</h3>
                 <p className="text-muted-foreground mb-8">
-                  Nuestro equipo de expertos está listo para ayudarte a crear la
-                  plataforma de tokenización perfecta para tu negocio
-                  inmobiliario.
+                  Nuestro equipo de expertos está listo para ayudarte a crear la plataforma de tokenización perfecta
+                  para tu negocio inmobiliario.
                 </p>
               </div>
 
@@ -245,9 +233,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <div className="font-medium">Email</div>
-                    <div className="text-muted-foreground">
-                      hello@brickforge.io
-                    </div>
+                    <div className="text-muted-foreground">hello@brickforge.io</div>
                   </div>
                 </div>
 
@@ -268,5 +254,5 @@ export default function HomePage() {
         {/* max-w-4xl */}
       </section>
     </div>
-  );
+  )
 }

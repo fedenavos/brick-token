@@ -9,67 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { ProjectCard } from "@/components/project-card"
 import { ConnectBar } from "@/components/connect-bar"
 import { Search, Filter, X } from "lucide-react"
+import { useProjects } from "@/lib/hooks/use-projects"
 import type { ProjectCard as ProjectCardType } from "@/lib/types"
-
-// Mock data - in real app this would come from API/contract
-const mockProjects: ProjectCardType[] = [
-  {
-    projectId: "proj-001",
-    name: "Complejo Residencial Palermo",
-    coverUrl: "/modern-residential-building-palermo.jpg",
-    city: "Buenos Aires",
-    estado: "RECAUDACION",
-    softCap: "500000",
-    hardCap: "1000000",
-    raised: "650000",
-    minTicket: "1000",
-    roiEst: "12-16%",
-    chainId: 137,
-    contractAddress: "0x1234567890123456789012345678901234567890",
-  },
-  {
-    projectId: "proj-002",
-    name: "Torre Corporativa Puerto Madero",
-    coverUrl: "/corporate-tower-puerto-madero.jpg",
-    city: "Buenos Aires",
-    estado: "EN_EJECUCION",
-    softCap: "400000",
-    hardCap: "750000",
-    raised: "750000",
-    minTicket: "500",
-    roiEst: "10-14%",
-    chainId: 137,
-    contractAddress: "0x2345678901234567890123456789012345678901",
-  },
-  {
-    projectId: "proj-003",
-    name: "Desarrollo Sustentable Nordelta",
-    coverUrl: "/sustainable-residential-development.jpg",
-    city: "Tigre",
-    estado: "RECAUDACION",
-    softCap: "300000",
-    hardCap: "600000",
-    raised: "180000",
-    minTicket: "750",
-    roiEst: "15-18%",
-    chainId: 137,
-    contractAddress: "0x3456789012345678901234567890123456789012",
-  },
-  {
-    projectId: "proj-004",
-    name: "Centro Comercial Rosario",
-    coverUrl: "/shopping-center-rosario.jpg",
-    city: "Rosario",
-    estado: "FINALIZADO",
-    softCap: "800000",
-    hardCap: "1200000",
-    raised: "1200000",
-    minTicket: "2000",
-    roiEst: "16%",
-    chainId: 137,
-    contractAddress: "0x4567890123456789012345678901234567890123",
-  },
-]
 
 const estadoOptions = [
   { value: "all", label: "Todos los estados" },
@@ -92,17 +33,36 @@ export default function MarketplacePage() {
   const [selectedCity, setSelectedCity] = useState("all")
   const [minTicketFilter, setMinTicketFilter] = useState("")
 
+  const { data: projects, isLoading, error } = useProjects()
+
   const filteredProjects = useMemo(() => {
-    return mockProjects.filter((project) => {
-      const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesEstado = selectedEstado === "all" || project.estado === selectedEstado
-      const matchesCity = selectedCity === "all" || project.city === selectedCity
+    if (!projects) return []
+
+    return projects.filter((project: any) => {
+      const projectCard: ProjectCardType = {
+        projectId: project.id,
+        name: project.descripcion?.titulo || project.name || "Sin título",
+        coverUrl: project.descripcion?.imagen_principal || "/placeholder.svg?height=300&width=400",
+        city: project.descripcion?.direccion?.split(",")[0] || "Sin ciudad",
+        estado: project.estado,
+        softCap: project.monto_minimo,
+        hardCap: project.monto_total,
+        raised: project.raised || "0",
+        minTicket: project.ticket_minimo,
+        roiEst: project.descripcion?.rentabilidad_esperada || "0%",
+        chainId: project.chainId,
+        contractAddress: project.contractAddress,
+      }
+
+      const matchesSearch = projectCard.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesEstado = selectedEstado === "all" || projectCard.estado === selectedEstado
+      const matchesCity = selectedCity === "all" || projectCard.city.includes(selectedCity)
       const matchesMinTicket =
-        !minTicketFilter || Number.parseFloat(project.minTicket) >= Number.parseFloat(minTicketFilter)
+        !minTicketFilter || Number.parseFloat(projectCard.minTicket) >= Number.parseFloat(minTicketFilter)
 
       return matchesSearch && matchesEstado && matchesCity && matchesMinTicket
     })
-  }, [searchTerm, selectedEstado, selectedCity, minTicketFilter])
+  }, [projects, searchTerm, selectedEstado, selectedCity, minTicketFilter])
 
   const clearFilters = () => {
     setSearchTerm("")
@@ -112,6 +72,47 @@ export default function MarketplacePage() {
   }
 
   const hasActiveFilters = searchTerm || selectedEstado !== "all" || selectedCity !== "all" || minTicketFilter
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <ConnectBar />
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-muted rounded w-1/3" />
+            <div className="h-48 bg-muted rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-64 bg-muted rounded" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <ConnectBar />
+          <Card>
+            <CardContent className="p-12 text-center">
+              <div className="space-y-4">
+                <div className="text-4xl">⚠️</div>
+                <h3 className="text-xl font-semibold">Error al cargar proyectos</h3>
+                <p className="text-muted-foreground">
+                  No se pudieron cargar los proyectos. Por favor, intenta nuevamente.
+                </p>
+                <Button onClick={() => window.location.reload()}>Reintentar</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,9 +237,11 @@ export default function MarketplacePage() {
                   <div className="text-4xl">🏗️</div>
                   <h3 className="text-xl font-semibold">No se encontraron proyectos</h3>
                   <p className="text-muted-foreground">
-                    Intenta ajustar los filtros para encontrar proyectos que coincidan con tus criterios
+                    {projects?.length === 0
+                      ? "Aún no hay proyectos disponibles en la plataforma"
+                      : "Intenta ajustar los filtros para encontrar proyectos que coincidan con tus criterios"}
                   </p>
-                  <Button onClick={clearFilters}>Limpiar filtros</Button>
+                  {hasActiveFilters && <Button onClick={clearFilters}>Limpiar filtros</Button>}
                 </div>
               </CardContent>
             </Card>
