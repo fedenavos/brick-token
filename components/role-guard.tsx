@@ -4,10 +4,7 @@ import type React from "react";
 import { useActiveAccount } from "thirdweb/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
-import { ConnectButton } from "thirdweb/react";
-import { client } from "@/lib/web3";
-import { polygon, polygonAmoy } from "@/lib/chains";
-import { walletConnect } from "thirdweb/wallets";
+import { ConnectBar } from "@/components/connect-bar";
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -25,28 +22,19 @@ export function RoleGuard({
   const account = useActiveAccount();
   const address = account?.address;
 
-  // Mock role checking - in real implementation, this would check against contract or backend
   const hasRole = userRole === requiredRole || userRole === "admin";
 
   if (!address) {
     return (
-      <Alert>
-        <Shield className="h-4 w-4" />
-        <AlertDescription className="flex flex-col gap-4">
-          <span>Conecta tu wallet para acceder a esta sección</span>
-          <ConnectButton
-            client={client}
-            wallets={[walletConnect()]}
-            chains={[polygon, polygonAmoy]}
-            connectButton={{
-              label: "Conectar Wallet",
-            }}
-            connectModal={{
-              size: "compact",
-            }}
-          />
-        </AlertDescription>
-      </Alert>
+      <div className="space-y-4">
+        <Alert>
+          <Shield className="h-4 w-4" />
+          <AlertDescription>
+            Conecta tu wallet para acceder a esta seccion.
+          </AlertDescription>
+        </Alert>
+        <ConnectBar />
+      </div>
     );
   }
 
@@ -56,7 +44,7 @@ export function RoleGuard({
         <Alert variant="destructive">
           <Shield className="h-4 w-4" />
           <AlertDescription>
-            No tienes permisos para acceder a esta sección. Rol requerido:{" "}
+            No tienes permisos para acceder a esta seccion. Rol requerido: {" "}
             {requiredRole}
           </AlertDescription>
         </Alert>
@@ -66,3 +54,4 @@ export function RoleGuard({
 
   return <>{children}</>;
 }
+

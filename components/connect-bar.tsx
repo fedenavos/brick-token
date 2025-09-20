@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet, Shield, AlertTriangle, CheckCircle } from "lucide-react";
 import { useWeb3Integration } from "@/lib/hooks/use-web3-integration";
 import { client } from "@/lib/web3";
-import { walletConnect } from "thirdweb/wallets";
+import { walletConnect, inAppWallet } from "thirdweb/wallets";
 import { polygon, polygonAmoy } from "@/lib/chains";
 
 export function ConnectBar() {
@@ -45,7 +45,6 @@ export function ConnectBar() {
         <div className="flex items-center gap-2">
           {isConnected && (
             <>
-              {/* User Role Badge */}
               {userRole && (
                 <Badge variant="secondary" className="gap-1">
                   <Shield className="h-3 w-3" />
@@ -53,7 +52,6 @@ export function ConnectBar() {
                 </Badge>
               )}
 
-              {/* Network Status */}
               {!isCorrectNetwork && (
                 <Badge variant="destructive" className="gap-1">
                   <AlertTriangle className="h-3 w-3" />
@@ -75,22 +73,24 @@ export function ConnectBar() {
 
           <ConnectButton
             client={client}
-            wallets={[walletConnect()]}
+            wallets={[
+              inAppWallet({
+                auth: { options: ["email", "google", "discord", "telegram"] },
+              }),
+              walletConnect(),
+            ]}
             chains={[polygon, polygonAmoy]}
             theme="light"
-            connectButton={{
-              label: "Conectar Wallet",
-            }}
+            connectButton={{ label: "Conectar Wallet" }}
             detailsButton={{
               displayBalanceToken: {
-                [137]: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // USDC on Polygon
+                137: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
               },
             }}
           />
         </div>
       </div>
 
-      {/* Network Warning */}
       {isConnected && !isCorrectNetwork && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -101,7 +101,6 @@ export function ConnectBar() {
         </Alert>
       )}
 
-      {/* Permissions Info */}
       {isConnected && isCorrectNetwork && userRole && (
         <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
           <div className="font-medium mb-1">Permisos disponibles:</div>
