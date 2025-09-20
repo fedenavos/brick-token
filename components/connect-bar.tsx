@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Wallet, Shield, AlertTriangle, CheckCircle } from "lucide-react"
 import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
-import { client } from "@/app/providers"
+import { client } from "@/lib/web3"
 import { walletConnect } from "thirdweb/wallets"
 import { polygon, polygonAmoy } from "@/lib/chains"
 
