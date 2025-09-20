@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { ConnectButton } from "thirdweb/react"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Wallet, Shield, AlertTriangle, CheckCircle } from "lucide-react"
-import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
-import { client } from "@/app/providers"
-import { walletConnect } from "thirdweb/wallets"
-import { polygon, polygonAmoy } from "@/lib/chains"
+import { ConnectButton } from "thirdweb/react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Wallet, Shield, AlertTriangle, CheckCircle } from "lucide-react";
+import { useWeb3Integration } from "@/lib/hooks/use-web3-integration";
+import { client } from "@/app/providers";
+import { walletConnect } from "thirdweb/wallets";
+import { polygon, polygonAmoy } from "@/lib/chains";
 
 export function ConnectBar() {
   const {
@@ -21,18 +21,24 @@ export function ConnectBar() {
     canApprove,
     canSubmitEvidence,
     canManageProjects,
-  } = useWeb3Integration()
+  } = useWeb3Integration();
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between p-4 bg-card rounded-xl border shadow-sm">
         <div className="flex items-center gap-3">
           <Wallet className="h-5 w-5 text-primary" />
-          <div className="flex flex-col">
+          <div className="flex flex-col mr-4">
             <div className="text-sm font-medium">
-              {isConnected ? `${address!.slice(0, 6)}...${address!.slice(-4)}` : "Wallet no conectada"}
+              {isConnected
+                ? `${address!.slice(0, 6)}...${address!.slice(-4)}`
+                : "Wallet no conectada"}
             </div>
-            {networkName && <div className="text-xs text-muted-foreground">Red: {networkName}</div>}
+            {networkName && (
+              <div className="text-xs text-muted-foreground">
+                Red: {networkName}
+              </div>
+            )}
           </div>
         </div>
 
@@ -56,7 +62,10 @@ export function ConnectBar() {
               )}
 
               {isCorrectNetwork && (
-                <Badge variant="default" className="gap-1 bg-green-500 text-white">
+                <Badge
+                  variant="default"
+                  className="gap-1 bg-green-500 text-white"
+                >
                   <CheckCircle className="h-3 w-3" />
                   Conectado
                 </Badge>
@@ -86,8 +95,8 @@ export function ConnectBar() {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Estás conectado a {networkName} pero necesitas estar en {targetNetworkName}. Por favor cambia de red en tu
-            wallet.
+            Estás conectado a {networkName} pero necesitas estar en{" "}
+            {targetNetworkName}. Por favor cambia de red en tu wallet.
           </AlertDescription>
         </Alert>
       )}
@@ -98,15 +107,24 @@ export function ConnectBar() {
           <div className="font-medium mb-1">Permisos disponibles:</div>
           <div className="flex flex-wrap gap-2">
             {canInvest && <span className="text-green-600">• Invertir</span>}
-            {canApprove && <span className="text-blue-600">• Aprobar hitos</span>}
-            {canSubmitEvidence && <span className="text-orange-600">• Enviar evidencias</span>}
-            {canManageProjects && <span className="text-purple-600">• Gestionar proyectos</span>}
-            {!canInvest && !canApprove && !canSubmitEvidence && !canManageProjects && (
-              <span className="text-muted-foreground">Solo lectura</span>
+            {canApprove && (
+              <span className="text-blue-600">• Aprobar hitos</span>
             )}
+            {canSubmitEvidence && (
+              <span className="text-orange-600">• Enviar evidencias</span>
+            )}
+            {canManageProjects && (
+              <span className="text-purple-600">• Gestionar proyectos</span>
+            )}
+            {!canInvest &&
+              !canApprove &&
+              !canSubmitEvidence &&
+              !canManageProjects && (
+                <span className="text-muted-foreground">Solo lectura</span>
+              )}
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }
