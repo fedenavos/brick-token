@@ -4,6 +4,10 @@ import type React from "react"
 import { useActiveAccount } from "thirdweb/react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Shield } from "lucide-react"
+import { ConnectButton } from "thirdweb/react"
+import { client } from "@/lib/web3"
+import { polygon, polygonAmoy } from "@/lib/chains"
+import { metamask, walletConnect } from "thirdweb/wallets"
 
 interface RoleGuardProps {
   children: React.ReactNode
@@ -23,7 +27,20 @@ export function RoleGuard({ children, requiredRole, userRole, fallback }: RoleGu
     return (
       <Alert>
         <Shield className="h-4 w-4" />
-        <AlertDescription>Conecta tu wallet para acceder a esta sección</AlertDescription>
+        <AlertDescription className="flex flex-col gap-4">
+          <span>Conecta tu wallet para acceder a esta sección</span>
+          <ConnectButton
+            client={client}
+            wallets={[metamask(), walletConnect()]}
+            chains={[polygon, polygonAmoy]}
+            connectButton={{
+              label: "Conectar Wallet",
+            }}
+            connectModal={{
+              size: "compact",
+            }}
+          />
+        </AlertDescription>
       </Alert>
     )
   }

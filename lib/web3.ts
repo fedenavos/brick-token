@@ -1,12 +1,16 @@
 "use client"
 
 import { getContract, readContract, prepareContractCall, sendTransaction } from "thirdweb"
+import { createThirdwebClient } from "thirdweb"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useActiveWallet } from "thirdweb/react"
 import { polygon } from "thirdweb/chains"
 import toast from "react-hot-toast"
 import type { ProjectDetail, ProjectCard } from "./types"
-import { client } from "@/app/providers"
+
+export const client = createThirdwebClient({
+  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || "your-client-id",
+})
 
 // Contract ABI interfaces (mock - replace with actual ABI when available)
 const PROJECT_REGISTRY_ABI = [
