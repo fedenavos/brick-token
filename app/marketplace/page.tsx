@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ConnectBar } from "@/components/connect-bar"
 import { ProjectCard } from "@/components/project-card"
+import { ConnectBar } from "@/components/connect-bar"
 import { Search, Filter, X } from "lucide-react"
 import type { ProjectCard as ProjectCardType } from "@/lib/types"
 
@@ -116,14 +116,13 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <ConnectBar />
+
         {/* Header */}
         <div className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">Marketplace de Proyectos</h1>
-              <p className="text-muted-foreground">Descubre y invierte en proyectos inmobiliarios tokenizados</p>
-            </div>
-              <ConnectBar />
+          <div>
+            <h1 className="text-3xl font-bold">Marketplace de Proyectos</h1>
+            <p className="text-muted-foreground">Descubre y invierte en proyectos inmobiliarios tokenizados</p>
           </div>
         </div>
 

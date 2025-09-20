@@ -2,8 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ConnectBar } from "@/components/connect-bar"
 import { RoleGuard } from "@/components/role-guard"
+import { ConnectBar } from "@/components/connect-bar"
 import { Building, Users, FileText, CheckCircle, DollarSign, Shield } from "lucide-react"
 import Link from "next/link"
 
@@ -88,14 +88,14 @@ export default function AdminDashboard() {
     <RoleGuard requiredRole="admin" userRole="admin">
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto p-6 space-y-6">
+          {/* ConnectBar */}
+          <ConnectBar />
+
           {/* Header */}
           <div className="space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold">Panel de Administración</h1>
-                <p className="text-muted-foreground">Gestiona proyectos, actores y aprobaciones del portal</p>
-              </div>
-              <ConnectBar />
+            <div>
+              <h1 className="text-3xl font-bold">Panel de Administración</h1>
+              <p className="text-muted-foreground">Gestiona proyectos, actores y aprobaciones del portal</p>
             </div>
           </div>
 
