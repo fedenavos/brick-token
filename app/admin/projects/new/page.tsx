@@ -11,12 +11,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ConnectBar } from "@/components/connect-bar"
 import { RoleGuard } from "@/components/role-guard"
+import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
 import { ArrowLeft, Building, Save } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
 export default function NewProjectPage() {
+  const { userRole } = useWeb3Integration()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -102,7 +104,7 @@ export default function NewProjectPage() {
   }
 
   return (
-    <RoleGuard requiredRole="admin" userRole="admin">
+    <RoleGuard requiredRole="admin" userRole={userRole}>
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto p-6 space-y-6">
           {/* Header */}

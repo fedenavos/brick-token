@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge"
 import { ConnectBar } from "@/components/connect-bar"
 import { RoleGuard } from "@/components/role-guard"
 import { DataTable } from "@/components/data-table"
+import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
 import { Building, Plus, Search, Edit, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useProjects } from "@/lib/hooks/use-projects"
 
 export default function AdminProjectsPage() {
+  const { userRole } = useWeb3Integration()
   const [searchTerm, setSearchTerm] = useState("")
 
   const { data: projects, isLoading, error } = useProjects()
@@ -104,7 +106,7 @@ export default function AdminProjectsPage() {
 
   if (isLoading) {
     return (
-      <RoleGuard requiredRole="admin" userRole="admin">
+      <RoleGuard requiredRole="admin" userRole={userRole}>
         <div className="min-h-screen bg-background">
           <div className="max-w-7xl mx-auto p-6 space-y-6">
             <div className="animate-pulse space-y-6">
@@ -119,7 +121,7 @@ export default function AdminProjectsPage() {
   }
 
   return (
-    <RoleGuard requiredRole="admin" userRole="admin">
+    <RoleGuard requiredRole="admin" userRole={userRole}>
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto p-6 space-y-6">
           {/* Header */}

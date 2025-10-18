@@ -20,6 +20,8 @@ export type Moneda = "USDC" | "DAI" | "ETH" | "MATIC" | string
 // Política de aprobación configurable por proyecto
 export type ApprovalPolicy = "EMISOR+AUDITOR" | "AUDITOR_SOLO" | "MAYORIA_2_DE_3"
 
+export type UserRole = "user" | "manager" | "admin"
+
 export interface ProyectoDescripcion {
   id: string
   descripcion: string

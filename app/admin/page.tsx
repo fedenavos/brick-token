@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RoleGuard } from "@/components/role-guard"
 import { ConnectBar } from "@/components/connect-bar"
+import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
 import { Building, Users, FileText, CheckCircle, DollarSign, Shield } from "lucide-react"
 import Link from "next/link"
 
@@ -84,8 +85,10 @@ const quickActions = [
 ]
 
 export default function AdminDashboard() {
+  const { userRole } = useWeb3Integration()
+
   return (
-    <RoleGuard requiredRole="admin" userRole="admin">
+    <RoleGuard requiredRole="admin" userRole={userRole}>
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto p-6 space-y-6">
           {/* ConnectBar */}
