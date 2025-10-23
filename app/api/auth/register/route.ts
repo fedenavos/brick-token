@@ -13,29 +13,17 @@ export async function POST(request: NextRequest) {
 
     const normalizedAddress = address.toLowerCase()
 
-    try {
-      const [existingUser] = await sql`
-        SELECT role FROM user_roles 
-        WHERE LOWER(address) = ${normalizedAddress}
-      `
+    const [existingUser] = await sql`
+      SELECT role FROM user_roles 
+      WHERE LOWER(address) = ${normalizedAddress}
+    `
 
-      if (existingUser) {
-        return NextResponse.json({
-          role: existingUser.role,
-          isNewUser: false,
-        })
-      }
-    } catch (dbError: any) {
-      if (dbError.message?.includes('relation "user_roles" does not exist')) {
-        console.warn("[v0] user_roles table does not exist. Please run migration script 003_create_roles_table.sql")
-        return NextResponse.json({
-          role: "user",
-          isNewUser: false,
-          needsMigration: true,
-          warning: "Role system not fully initialized. Please run database migrations.",
-        })
-      }
-      throw dbError
+    if (existingUser) {
+      // User already registered, return their existing role
+      return NextResponse.json({
+        role: existingUser.role,
+        isNewUser: false,
+      })
     }
 
     // First, create investor record with RECHAZADO KYC status
