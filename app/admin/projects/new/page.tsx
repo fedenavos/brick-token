@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ConnectBar } from "@/components/connect-bar"
 import { RoleGuard } from "@/components/role-guard"
 import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
-import { ArrowLeft, Building, Save } from "lucide-react"
+import { ArrowLeft, Building, Save, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
@@ -22,15 +22,16 @@ export default function NewProjectPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    // Campos necesarios para createCampaign
+    // Campos REALES para createCampaign en el contrato
     ipfs_hash: "",              // _ipfsHash: documentación del proyecto
     monto_total: "",            // _goal: objetivo de recaudación
     starts_at_days: "1",        // _startsAt: días desde ahora
     duration_days: "30",        // _endsAt: duración en días
-    cantidad_certificados: "",  // _certificates: número de certificados
-    certificate_proof: "",      // _certificateProof: prueba IPFS
     
-    // Campos para backend (mantener)
+    // Campo para AsignarCertificado (se llama después)
+    certificate_id: "",         // ID del certificado existente a asignar
+    
+    // Campos para backend/UI (no van al contrato en createCampaign)
     descripcion: "",
     direccion: "",
     organizador: "",
@@ -58,33 +59,25 @@ export default function NewProjectPage() {
     setIsLoading(true)
 
     try {
-      // Validación de campos requeridos para createCampaign
+      // Validación de campos requeridos REALES del contrato
       const requiredBlockchainFields = [
         "ipfs_hash",
         "monto_total",
-        "cantidad_certificados",
         "contractAddress",
       ]
       
       const missingFields = requiredBlockchainFields.filter((field) => !formData[field as keyof typeof formData])
       if (missingFields.length > 0) {
-        toast.error(`Campos blockchain requeridos: ${missingFields.join(", ")}`)
+        toast.error(`Campos requeridos: ${missingFields.join(", ")}`)
         setIsLoading(false)
         return
       }
 
       // Validaciones
       const montoTotal = Number(formData.monto_total)
-      const cantidadCertificados = Number(formData.cantidad_certificados)
       
       if (montoTotal <= 0) {
         toast.error("El monto total debe ser mayor a 0")
-        setIsLoading(false)
-        return
-      }
-
-      if (cantidadCertificados <= 0) {
-        toast.error("La cantidad de certificados debe ser mayor a 0")
         setIsLoading(false)
         return
       }
@@ -93,12 +86,8 @@ export default function NewProjectPage() {
       toast.loading("Conectando al contrato...")
       const core = await getCoreContract(formData.contractAddress)
 
-      // Preparar parámetros para createCampaign
+      // Preparar parámetros para createCampaign (SOLO 4 PARÁMETROS)
       const ipfsHashBytes32 = ipfsCidToBytes32(formData.ipfs_hash)
-      const certificateProofBytes32 = formData.certificate_proof 
-        ? ipfsCidToBytes32(formData.certificate_proof)
-        : ipfsHashBytes32
-
       const goalInTokenUnits = toTokenUnits(montoTotal, 6) // 6 decimales para USDC/USDT
 
       // Calcular timestamps
@@ -111,23 +100,42 @@ export default function NewProjectPage() {
       toast.dismiss()
       toast.loading("Creando campaña en blockchain...")
 
-      // Llamar a createCampaign
+      // Llamar a createCampaign con los 4 parámetros correctos
       const tx = await core.createCampaign(
         ipfsHashBytes32,           // bytes32 _ipfsHash
         goalInTokenUnits,          // uint _goal
         startsAt,                  // uint _startsAt
-        endsAt,                    // uint _endsAt
-        cantidadCertificados,      // uint _certificates
-        certificateProofBytes32    // bytes32 _certificateProof
+        endsAt                     // uint _endsAt
       )
 
       const receipt = await tx.wait()
       
-      toast.dismiss()
-      toast.success(`Campaña creada! Tx: ${receipt.transactionHash.slice(0, 10)}...`)
+      // Obtener el ID de la campaña del evento
+      const campaignCreatedEvent = receipt.events?.find(
+        (e: any) => e.event === "CampaignCreated"
+      )
+      const campaignId = campaignCreatedEvent?.args?.campaignId
 
-      // Aquí podrías guardar los datos adicionales en tu backend si es necesario
-      // await saveToBackend(formData, receipt.transactionHash)
+      toast.dismiss()
+      toast.success(`Campaña ${campaignId} creada! Tx: ${receipt.transactionHash.slice(0, 10)}...`)
+
+      // Si hay un certificado ID, asignarlo
+      if (formData.certificate_id && campaignId) {
+        try {
+          toast.loading("Asignando certificado...")
+          const certificateId = Number(formData.certificate_id)
+          const assignTx = await core.AsignarCertificado(certificateId, campaignId)
+          await assignTx.wait()
+          toast.dismiss()
+          toast.success("Certificado asignado correctamente")
+        } catch (certError: any) {
+          console.error("Error asignando certificado:", certError)
+          toast.error("Campaña creada pero error al asignar certificado")
+        }
+      }
+
+      // Guardar datos adicionales en backend si es necesario
+      // await saveToBackend({ ...formData, campaignId, txHash: receipt.transactionHash })
 
       setTimeout(() => {
         router.push("/admin/projects")
@@ -175,11 +183,30 @@ export default function NewProjectPage() {
             </div>
           </div>
 
+          {/* Alerta informativa */}
+          <Card className="border-blue-500 bg-blue-50 dark:bg-blue-950">
+            <CardContent className="pt-6">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="space-y-2 text-sm text-blue-900 dark:text-blue-100">
+                  <p className="font-semibold">Proceso de creación:</p>
+                  <ol className="list-decimal list-inside space-y-1 ml-2">
+                    <li>Se crea la campaña con estado PENDING</li>
+                    <li>Admin debe aprobar con approveCampaign() → estado APPROVED</li>
+                    <li>Se despliegan contratos Custody y TokenMinter</li>
+                    <li>Se configura con configureCampaign() → estado DEPLOYED</li>
+                    <li>Se inicia recaudación con startCollecting() → estado COLLECTING</li>
+                  </ol>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Configuración Blockchain - REQUERIDO para createCampaign */}
+            {/* Configuración Blockchain - PARÁMETROS REALES */}
             <Card className="border-primary">
               <CardHeader>
-                <CardTitle>⛓️ Configuración ONCHAIN</CardTitle>
+                <CardTitle>⛓️ Configuración Blockchain (createCampaign)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
@@ -209,7 +236,7 @@ export default function NewProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ipfs_hash">Hash IPFS de Documentación *</Label>
+                  <Label htmlFor="ipfs_hash">Hash IPFS de Documentación (_ipfsHash) *</Label>
                   <Input
                     id="ipfs_hash"
                     value={formData.ipfs_hash}
@@ -218,13 +245,13 @@ export default function NewProjectPage() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    CID de IPFS con toda la documentación del proyecto
+                    CID de IPFS con toda la documentación del proyecto (parámetro 1)
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="monto_total">Monto Total (Goal) *</Label>
+                    <Label htmlFor="monto_total">Monto Total - Goal (_goal) *</Label>
                     <Input
                       id="monto_total"
                       type="number"
@@ -233,22 +260,12 @@ export default function NewProjectPage() {
                       placeholder="1000000"
                       required
                     />
-                    <p className="text-xs text-muted-foreground">En {formData.moneda}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Objetivo de recaudación en {formData.moneda} (parámetro 2)
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cantidad_certificados">Cantidad de Certificados *</Label>
-                    <Input
-                      id="cantidad_certificados"
-                      type="number"
-                      value={formData.cantidad_certificados}
-                      onChange={(e) => handleInputChange("cantidad_certificados", e.target.value)}
-                      placeholder="100"
-                      min="1"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="moneda">Moneda</Label>
+                    <Label htmlFor="moneda">Moneda (Token)</Label>
                     <Select value={formData.moneda} onValueChange={(value) => handleInputChange("moneda", value)}>
                       <SelectTrigger>
                         <SelectValue />
@@ -262,9 +279,9 @@ export default function NewProjectPage() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="starts_at_days">Inicio (días desde ahora)</Label>
+                    <Label htmlFor="starts_at_days">Inicio (_startsAt) - días desde ahora</Label>
                     <Input
                       id="starts_at_days"
                       type="number"
@@ -273,9 +290,10 @@ export default function NewProjectPage() {
                       placeholder="1"
                       min="0"
                     />
+                    <p className="text-xs text-muted-foreground">Parámetro 3: timestamp inicio</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="duration_days">Duración (días)</Label>
+                    <Label htmlFor="duration_days">Duración (_endsAt) - días</Label>
                     <Input
                       id="duration_days"
                       type="number"
@@ -284,24 +302,31 @@ export default function NewProjectPage() {
                       placeholder="30"
                       min="1"
                     />
+                    <p className="text-xs text-muted-foreground">Parámetro 4: timestamp fin</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="certificate_proof">Hash IPFS Certificado</Label>
-                    <Input
-                      id="certificate_proof"
-                      value={formData.certificate_proof}
-                      onChange={(e) => handleInputChange("certificate_proof", e.target.value)}
-                      placeholder="Opcional"
-                    />
-                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="certificate_id">ID del Certificado (opcional)</Label>
+                  <Input
+                    id="certificate_id"
+                    type="number"
+                    value={formData.certificate_id}
+                    onChange={(e) => handleInputChange("certificate_id", e.target.value)}
+                    placeholder="Ej: 1"
+                    min="1"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Se asignará después de crear la campaña con AsignarCertificado()
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Project Description - Para Backend */}
+            {/* Descripción del Proyecto - Para Backend */}
             <Card>
               <CardHeader>
-                <CardTitle>Descripción del Proyecto general</CardTitle>
+                <CardTitle>📄 Descripción del Proyecto (Backend/UI)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
@@ -378,10 +403,10 @@ export default function NewProjectPage() {
               </CardContent>
             </Card>
 
-            {/* Project Configuration - Para Backend */}
+            {/* Configuración Adicional - Para Backend */}
             <Card>
               <CardHeader>
-                <CardTitle>Configuración Adicional</CardTitle>
+                <CardTitle>⚙️ Configuración Adicional (Backend/UI)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-3 gap-4">
@@ -475,7 +500,7 @@ export default function NewProjectPage() {
               </Button>
               <Button type="submit" disabled={isLoading} className="gap-2">
                 <Save className="h-4 w-4" />
-                {isLoading ? "Creando en Blockchain..." : "Crear Proyecto"}
+                {isLoading ? "Creando en Blockchain..." : "Crear Campaña"}
               </Button>
             </div>
           </form>
