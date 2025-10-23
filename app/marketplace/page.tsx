@@ -1,23 +1,29 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { ProjectCard } from "@/components/project-card"
-import { ConnectBar } from "@/components/connect-bar"
-import { Search, Filter, X } from "lucide-react"
-import { useProjects } from "@/lib/hooks/use-projects"
-import type { ProjectCard as ProjectCardType } from "@/lib/types"
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ProjectCard } from "@/components/project-card";
+import { ConnectBar } from "@/components/connect-bar";
+import { Search, Filter, X } from "lucide-react";
+import { useProjects } from "@/lib/hooks/use-projects";
+import type { ProjectCard as ProjectCardType } from "@/lib/types";
 
 const estadoOptions = [
   { value: "all", label: "Todos los estados" },
   { value: "RECAUDACION", label: "Recaudando" },
   { value: "EN_EJECUCION", label: "En Ejecución" },
   { value: "FINALIZADO", label: "Completado" },
-]
+];
 
 const cityOptions = [
   { value: "all", label: "Todas las ciudades" },
@@ -25,24 +31,26 @@ const cityOptions = [
   { value: "Rosario", label: "Rosario" },
   { value: "Córdoba", label: "Córdoba" },
   { value: "Tigre", label: "Tigre" },
-]
+];
 
 export default function MarketplacePage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedEstado, setSelectedEstado] = useState("all")
-  const [selectedCity, setSelectedCity] = useState("all")
-  const [minTicketFilter, setMinTicketFilter] = useState("")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEstado, setSelectedEstado] = useState("all");
+  const [selectedCity, setSelectedCity] = useState("all");
+  const [minTicketFilter, setMinTicketFilter] = useState("");
 
-  const { data: projects, isLoading, error } = useProjects()
+  const { data: projects, isLoading, error } = useProjects();
 
   const filteredProjects = useMemo(() => {
-    if (!projects) return []
+    if (!projects) return [];
 
     return projects.filter((project: any) => {
       const projectCard: ProjectCardType = {
         projectId: project.id,
-        name: project.descripcion?.titulo || project.name || "Sin título",
-        coverUrl: project.descripcion?.imagen_principal || "/placeholder.svg?height=300&width=400",
+        name: project.name || project.descripcion?.titulo || "Sin título",
+        coverUrl:
+          project.descripcion?.imagen_principal ||
+          "/placeholder.svg?height=300&width=400",
         city: project.descripcion?.direccion?.split(",")[0] || "Sin ciudad",
         estado: project.estado,
         softCap: project.monto_minimo,
@@ -52,26 +60,36 @@ export default function MarketplacePage() {
         roiEst: project.descripcion?.rentabilidad_esperada || "0%",
         chainId: project.chainId,
         contractAddress: project.contractAddress,
-      }
+      };
 
-      const matchesSearch = projectCard.name.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesEstado = selectedEstado === "all" || projectCard.estado === selectedEstado
-      const matchesCity = selectedCity === "all" || projectCard.city.includes(selectedCity)
+      const matchesSearch = projectCard.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesEstado =
+        selectedEstado === "all" || projectCard.estado === selectedEstado;
+      const matchesCity =
+        selectedCity === "all" || projectCard.city.includes(selectedCity);
       const matchesMinTicket =
-        !minTicketFilter || Number.parseFloat(projectCard.minTicket) >= Number.parseFloat(minTicketFilter)
+        !minTicketFilter ||
+        Number.parseFloat(projectCard.minTicket) >=
+          Number.parseFloat(minTicketFilter);
 
-      return matchesSearch && matchesEstado && matchesCity && matchesMinTicket
-    })
-  }, [projects, searchTerm, selectedEstado, selectedCity, minTicketFilter])
+      return matchesSearch && matchesEstado && matchesCity && matchesMinTicket;
+    });
+  }, [projects, searchTerm, selectedEstado, selectedCity, minTicketFilter]);
 
   const clearFilters = () => {
-    setSearchTerm("")
-    setSelectedEstado("all")
-    setSelectedCity("all")
-    setMinTicketFilter("")
-  }
+    setSearchTerm("");
+    setSelectedEstado("all");
+    setSelectedCity("all");
+    setMinTicketFilter("");
+  };
 
-  const hasActiveFilters = searchTerm || selectedEstado !== "all" || selectedCity !== "all" || minTicketFilter
+  const hasActiveFilters =
+    searchTerm ||
+    selectedEstado !== "all" ||
+    selectedCity !== "all" ||
+    minTicketFilter;
 
   if (isLoading) {
     return (
@@ -89,7 +107,7 @@ export default function MarketplacePage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -101,17 +119,22 @@ export default function MarketplacePage() {
             <CardContent className="p-12 text-center">
               <div className="space-y-4">
                 <div className="text-4xl">⚠️</div>
-                <h3 className="text-xl font-semibold">Error al cargar proyectos</h3>
+                <h3 className="text-xl font-semibold">
+                  Error al cargar proyectos
+                </h3>
                 <p className="text-muted-foreground">
-                  No se pudieron cargar los proyectos. Por favor, intenta nuevamente.
+                  No se pudieron cargar los proyectos. Por favor, intenta
+                  nuevamente.
                 </p>
-                <Button onClick={() => window.location.reload()}>Reintentar</Button>
+                <Button onClick={() => window.location.reload()}>
+                  Reintentar
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -123,7 +146,9 @@ export default function MarketplacePage() {
         <div className="space-y-4">
           <div>
             <h1 className="text-3xl font-bold">Marketplace de Proyectos</h1>
-            <p className="text-muted-foreground">Descubre y invierte en proyectos inmobiliarios tokenizados</p>
+            <p className="text-muted-foreground">
+              Descubre y invierte en proyectos inmobiliarios tokenizados
+            </p>
           </div>
         </div>
 
@@ -188,32 +213,55 @@ export default function MarketplacePage() {
             {/* Active Filters & Clear */}
             {hasActiveFilters && (
               <div className="flex items-center gap-2 pt-2">
-                <span className="text-sm text-muted-foreground">Filtros activos:</span>
+                <span className="text-sm text-muted-foreground">
+                  Filtros activos:
+                </span>
                 {searchTerm && (
                   <Badge variant="secondary" className="gap-1">
                     Búsqueda: {searchTerm}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setSearchTerm("")} />
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSearchTerm("")}
+                    />
                   </Badge>
                 )}
                 {selectedEstado !== "all" && (
                   <Badge variant="secondary" className="gap-1">
-                    Estado: {estadoOptions.find((o) => o.value === selectedEstado)?.label}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedEstado("all")} />
+                    Estado:{" "}
+                    {
+                      estadoOptions.find((o) => o.value === selectedEstado)
+                        ?.label
+                    }
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSelectedEstado("all")}
+                    />
                   </Badge>
                 )}
                 {selectedCity !== "all" && (
                   <Badge variant="secondary" className="gap-1">
                     Ciudad: {selectedCity}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedCity("all")} />
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSelectedCity("all")}
+                    />
                   </Badge>
                 )}
                 {minTicketFilter && (
                   <Badge variant="secondary" className="gap-1">
                     Min: ${minTicketFilter}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setMinTicketFilter("")} />
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setMinTicketFilter("")}
+                    />
                   </Badge>
                 )}
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="ml-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="ml-2"
+                >
                   Limpiar filtros
                 </Button>
               </div>
@@ -225,7 +273,8 @@ export default function MarketplacePage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">
-              {filteredProjects.length} proyecto{filteredProjects.length !== 1 ? "s" : ""} encontrado
+              {filteredProjects.length} proyecto
+              {filteredProjects.length !== 1 ? "s" : ""} encontrado
               {filteredProjects.length !== 1 ? "s" : ""}
             </h2>
           </div>
@@ -235,13 +284,17 @@ export default function MarketplacePage() {
               <CardContent className="p-12 text-center">
                 <div className="space-y-4">
                   <div className="text-4xl">🏗️</div>
-                  <h3 className="text-xl font-semibold">No se encontraron proyectos</h3>
+                  <h3 className="text-xl font-semibold">
+                    No se encontraron proyectos
+                  </h3>
                   <p className="text-muted-foreground">
                     {projects?.length === 0
                       ? "Aún no hay proyectos disponibles en la plataforma"
                       : "Intenta ajustar los filtros para encontrar proyectos que coincidan con tus criterios"}
                   </p>
-                  {hasActiveFilters && <Button onClick={clearFilters}>Limpiar filtros</Button>}
+                  {hasActiveFilters && (
+                    <Button onClick={clearFilters}>Limpiar filtros</Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -255,5 +308,5 @@ export default function MarketplacePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
