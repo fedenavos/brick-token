@@ -1,12 +1,12 @@
 // lib/eth/core.ts
 "use client"
-
+//env"
 import { BrowserProvider, Contract, parseUnits } from "ethers"
 import bs58 from "bs58"
-// Importa el ABI de Core, ajustando si tu JSON tiene "abi" dentro
 import CoreAbiJson from "../../contracts/abis/Core.json"
+const CoreAbi = CoreAbiJson.abi || CoreAbiJson
 
-const CoreAbi = CoreAbiJson.abi || CoreAbiJson // asegura que siempre tengas el array de ABI
+export const CORE_ADDRESS = "0xE3b14a733634682fb06b81B3a5a16E8DEF629534";
 
 /**
  * Convierte un CIDv0 (Base58) de IPFS en un hash bytes32 compatible con Solidity
@@ -21,7 +21,7 @@ export function ipfsCidToBytes32(cid: string): string {
 /**
  * Inicializa el contrato Core conectado al signer (cuenta activa en MetaMask)
  */
-export async function getCoreContract(address: string) {
+export async function getCoreContract(address: string = CORE_ADDRESS) {
   if (typeof window === "undefined") throw new Error("No se puede acceder a window en SSR")
   const { ethereum } = window as any
   if (!ethereum) throw new Error("No se detectó MetaMask")
@@ -29,8 +29,6 @@ export async function getCoreContract(address: string) {
   // Ethers v6 BrowserProvider
   const provider = new BrowserProvider(ethereum)
   const signer = await provider.getSigner()
-
-  // Contract con ABI correctamente cargado
   return new Contract(address, CoreAbi, signer)
 }
 

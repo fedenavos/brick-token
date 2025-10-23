@@ -7,7 +7,7 @@ import { Wallet, Shield, AlertTriangle, CheckCircle } from "lucide-react"
 import { useWeb3Integration } from "@/lib/hooks/use-web3-integration"
 import { client } from "@/lib/web3"
 import { walletConnect, inAppWallet } from "thirdweb/wallets"
-import { polygon, polygonAmoy } from "@/lib/chains"
+import { sepolia } from "@/lib/chains"
 
 export function ConnectBar() {
   const {
@@ -28,7 +28,7 @@ export function ConnectBar() {
   const getRoleDisplayName = (role?: string) => {
     switch (role) {
       case "admin":
-        return "Administrador"
+        return "Administrador"  
       case "manager":
         return "Manager"
       case "user":
@@ -85,12 +85,12 @@ export function ConnectBar() {
               }),
               walletConnect(),
             ]}
-            chains={[polygon, polygonAmoy]}
+            chains={[sepolia]}
             theme="light"
             connectButton={{ label: "Conectar Wallet" }}
             detailsButton={{
               displayBalanceToken: {
-                137: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+                11155111: "0xe6a583AAcdDA1AD92F88C7fC564B6E594bf8c6F5",
               },
             }}
           />

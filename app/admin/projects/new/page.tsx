@@ -46,8 +46,8 @@ export default function NewProjectPage() {
     monto_minimo: "",
     ticket_minimo: "",
     approvalPolicy: "",
-    chainId: "137",
-    contractAddress: "",
+    chainId: "11155111",
+    contractAddress: "0xE3b14a733634682fb06b81B3a5a16E8DEF629534",
   })
 
   const handleInputChange = (field: string, value: string) => {
@@ -227,9 +227,7 @@ export default function NewProjectPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="137">Polygon (137)</SelectItem>
-                        <SelectItem value="1">Ethereum (1)</SelectItem>
-                        <SelectItem value="8453">Base (8453)</SelectItem>
+                        <SelectItem value="11155111">Sepolia (11155111)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -271,9 +269,7 @@ export default function NewProjectPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="USDC">USDC</SelectItem>
                         <SelectItem value="USDT">USDT</SelectItem>
-                        <SelectItem value="DAI">DAI</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

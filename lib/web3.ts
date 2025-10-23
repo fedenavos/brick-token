@@ -4,7 +4,7 @@ import { getContract, prepareContractCall, sendTransaction } from "thirdweb";
 import { createThirdwebClient } from "thirdweb";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveWallet } from "thirdweb/react";
-import { polygon } from "thirdweb/chains";
+import { sepolia } from "thirdweb/chains";
 import toast from "react-hot-toast";
 import type { ProjectDetail, ProjectCard } from "./types";
 
@@ -29,11 +29,11 @@ const PROJECT_REGISTRY_ABI = [
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 const CONTRACT_ADDRESS =
   process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
-  "0x1234567890123456789012345678901234567890";
+  "0xE3b14a733634682fb06b81B3a5a16E8DEF629534";
 
 const contract = getContract({
   client,
-  chain: polygon,
+  chain: sepolia,
   address: CONTRACT_ADDRESS,
 });
 

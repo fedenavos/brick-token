@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { ConnectButton } from "thirdweb/react";
 import { client } from "@/lib/web3";
 import { walletConnect, inAppWallet } from "thirdweb/wallets";
-import { polygon, polygonAmoy } from "@/lib/chains";
+import { sepolia } from "@/lib/chains";
 import { cn } from "@/lib/utils";
+
 
 export function Header() {
   const pathname = usePathname();
@@ -59,12 +60,12 @@ export function Header() {
               }),
               walletConnect(),
             ]}
-            chains={[polygon, polygonAmoy]}
+            chains={[sepolia]}
             theme="light"
             connectButton={{ label: "Conectar Wallet" }}
             detailsButton={{
               displayBalanceToken: {
-                137: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+                11155111: "0xe6a583AAcdDA1AD92F88C7fC564B6E594bf8c6F5",
               },
             }}
           />
