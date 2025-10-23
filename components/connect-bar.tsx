@@ -23,6 +23,8 @@ export function ConnectBar() {
     canManageProjects,
   } = useWeb3Integration()
 
+  console.log(isConnected, isCorrectNetwork, userRole)
+
   const getRoleDisplayName = (role?: string) => {
     switch (role) {
       case "admin":
