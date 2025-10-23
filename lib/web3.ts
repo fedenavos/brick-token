@@ -266,34 +266,6 @@ export function useProject(projectId: string) {
   });
 }
 
-// Investment Hook
-export function useInvest() {
-  const web3Service = useWeb3Service();
-  const wallet = useActiveWallet();
-
-  return useMutation({
-    mutationFn: async ({
-      projectId,
-      amount,
-    }: {
-      projectId: string;
-      amount: string;
-    }) => {
-      const txHash = await web3Service.invest(projectId, amount, wallet);
-      return { txHash };
-    },
-    onSuccess: (data, variables) => {
-      toast.success("Inversión enviada exitosamente");
-      web3Service.invalidateQueries(["projects", "project"]);
-      console.log("[v0] Investment successful:", data.txHash);
-    },
-    onError: (error: any) => {
-      toast.error(error?.message ?? "Error en la transacción");
-      console.error("[v0] Investment failed:", error);
-    },
-  });
-}
-
 // Evidence Upload Hook - Simplified without storage upload for now
 export function useSubmitEvidence() {
   const web3Service = useWeb3Service();

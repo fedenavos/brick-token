@@ -1,27 +1,33 @@
-"use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ConnectBar } from "@/components/connect-bar"
-import { FundingProgress } from "@/components/funding-progress"
-import { MilestonesStepper } from "@/components/milestones-stepper"
-import { InvestPanel } from "@/components/invest-panel"
-import { OnChainTimeline } from "@/components/on-chain-timeline"
-import { MyContributions } from "@/components/my-contributions"
-import { EvidenceGallery } from "@/components/evidence-gallery"
-import { useProject } from "@/lib/hooks/use-projects"
-import { MapPin, Building, Calendar, TrendingUp, Shield } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+"use client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ConnectBar } from "@/components/connect-bar";
+import { FundingProgress } from "@/components/funding-progress";
+import { MilestonesStepper } from "@/components/milestones-stepper";
+import { InvestPanel } from "@/components/invest-panel";
+import { OnChainTimeline } from "@/components/on-chain-timeline";
+import { MyContributions } from "@/components/my-contributions";
+import { EvidenceGallery } from "@/components/evidence-gallery";
+import { useProject } from "@/lib/hooks/use-projects";
+import { MapPin, Building, Calendar, TrendingUp, Shield } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 interface ProjectDetailPageProps {
-  params: { projectId: string }
+  params: { projectId: string };
 }
 
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
-  const { projectId } = params
-  const { data: project, isLoading, error } = useProject(projectId)
+  const { projectId } = params;
+  const { data: project, isLoading, error } = useProject(projectId);
+
+  const addresses = {
+    core: "0xCoreContract..." as `0x${string}`,
+    usdt: "0xUsdtToken..." as `0x${string}`,
+    identityRegistry: "0xIdentityRegistry..." as `0x${string}`,
+  };
 
   if (isLoading) {
     return (
@@ -40,7 +46,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !project) {
@@ -51,9 +57,12 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             <CardContent className="p-12 text-center">
               <div className="space-y-4">
                 <div className="text-4xl">🏗️</div>
-                <h3 className="text-xl font-semibold">Proyecto no encontrado</h3>
+                <h3 className="text-xl font-semibold">
+                  Proyecto no encontrado
+                </h3>
                 <p className="text-muted-foreground">
-                  El proyecto que buscas no existe o no está disponible en este momento
+                  El proyecto que buscas no existe o no está disponible en este
+                  momento
                 </p>
                 <Button asChild>
                   <Link href="/marketplace">Volver al Marketplace</Link>
@@ -63,36 +72,36 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   const getStatusColor = (estado: string) => {
     switch (estado) {
       case "RECAUDACION":
-        return "bg-primary text-primary-foreground"
+        return "bg-primary text-primary-foreground";
       case "EN_EJECUCION":
-        return "bg-secondary text-secondary-foreground"
+        return "bg-secondary text-secondary-foreground";
       case "FINALIZADO":
-        return "bg-green-500 text-white"
+        return "bg-green-500 text-white";
       default:
-        return "bg-muted text-muted-foreground"
+        return "bg-muted text-muted-foreground";
     }
-  }
+  };
 
   const getStatusText = (estado: string) => {
     switch (estado) {
       case "RECAUDACION":
-        return "Recaudando Fondos"
+        return "Recaudando Fondos";
       case "EN_EJECUCION":
-        return "En Ejecución"
+        return "En Ejecución";
       case "FINALIZADO":
-        return "Proyecto Completado"
+        return "Proyecto Completado";
       case "BORRADOR":
-        return "En Borrador"
+        return "En Borrador";
       default:
-        return estado
+        return estado;
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,25 +124,35 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <CardContent className="p-0">
             <div className="relative">
               <img
-                src={project.coverUrl || "/placeholder.svg?height=400&width=800"}
+                src={
+                  project.coverUrl || "/placeholder.svg?height=400&width=800"
+                }
                 alt={project.name}
                 className="w-full h-64 md:h-80 object-cover rounded-t-lg"
               />
-              <Badge className={`absolute top-4 right-4 ${getStatusColor(project.estado)}`}>
+              <Badge
+                className={`absolute top-4 right-4 ${getStatusColor(
+                  project.estado
+                )}`}
+              >
                 {getStatusText(project.estado)}
               </Badge>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold text-balance">{project.name}</h1>
+                  <h1 className="text-3xl font-bold text-balance">
+                    {project.name}
+                  </h1>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
                     <span>{project.descripcion.direccion}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Building className="h-4 w-4" />
-                    <span>Desarrollado por {project.descripcion.organizador}</span>
+                    <span>
+                      Desarrollado por {project.descripcion.organizador}
+                    </span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -162,14 +181,22 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold">{project.investors}</div>
-                  <div className="text-sm text-muted-foreground">Inversores</div>
+                  <div className="text-sm text-muted-foreground">
+                    Inversores
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">${Number.parseFloat(project.minTicket).toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Ticket Mínimo</div>
+                  <div className="text-2xl font-bold">
+                    ${Number.parseFloat(project.minTicket).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Ticket Mínimo
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{project.proyecto.cantidad_etapas}</div>
+                  <div className="text-2xl font-bold">
+                    {project.proyecto.cantidad_etapas}
+                  </div>
                   <div className="text-sm text-muted-foreground">Etapas</div>
                 </div>
               </div>
@@ -204,44 +231,78 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                     <CardTitle>Descripción del Proyecto</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-muted-foreground leading-relaxed">{project.descripcion.descripcion}</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {project.descripcion.descripcion}
+                    </p>
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="font-semibold mb-2">Detalles Financieros</h4>
+                        <h4 className="font-semibold mb-2">
+                          Detalles Financieros
+                        </h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Rentabilidad Esperada:</span>
-                            <span className="font-medium">{project.descripcion.rentabilidad_esperada}</span>
+                            <span className="text-muted-foreground">
+                              Rentabilidad Esperada:
+                            </span>
+                            <span className="font-medium">
+                              {project.descripcion.rentabilidad_esperada}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Renta Garantizada:</span>
-                            <span className="font-medium">{project.descripcion.renta_garantizada}</span>
+                            <span className="text-muted-foreground">
+                              Renta Garantizada:
+                            </span>
+                            <span className="font-medium">
+                              {project.descripcion.renta_garantizada}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Plazo de Renta:</span>
-                            <span className="font-medium">{project.descripcion.plazo_renta}</span>
+                            <span className="text-muted-foreground">
+                              Plazo de Renta:
+                            </span>
+                            <span className="font-medium">
+                              {project.descripcion.plazo_renta}
+                            </span>
                           </div>
                         </div>
                       </div>
 
                       <div>
-                        <h4 className="font-semibold mb-2">Estado de la Obra</h4>
-                        <p className="text-sm text-muted-foreground">{project.descripcion.estado_actual_obra}</p>
+                        <h4 className="font-semibold mb-2">
+                          Estado de la Obra
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {project.descripcion.estado_actual_obra}
+                        </p>
 
-                        <h4 className="font-semibold mb-2 mt-4">Actores del Proyecto</h4>
+                        <h4 className="font-semibold mb-2 mt-4">
+                          Actores del Proyecto
+                        </h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Emisor:</span>
-                            <span className="font-medium">{project.actores.emisor.nombre}</span>
+                            <span className="text-muted-foreground">
+                              Emisor:
+                            </span>
+                            <span className="font-medium">
+                              {project.actores.emisor.nombre}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Desarrollador:</span>
-                            <span className="font-medium">{project.actores.desarrollador.nombre}</span>
+                            <span className="text-muted-foreground">
+                              Desarrollador:
+                            </span>
+                            <span className="font-medium">
+                              {project.actores.desarrollador.nombre}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Auditor:</span>
-                            <span className="font-medium">{project.actores.auditor.nombre}</span>
+                            <span className="text-muted-foreground">
+                              Auditor:
+                            </span>
+                            <span className="font-medium">
+                              {project.actores.auditor.nombre}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -259,7 +320,11 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               </TabsContent>
 
               <TabsContent value="evidence">
-                <EvidenceGallery projectId={project.projectId} hitos={project.hitos} userRole="investor" />
+                <EvidenceGallery
+                  projectId={project.projectId}
+                  hitos={project.hitos}
+                  userRole="investor"
+                />
               </TabsContent>
 
               <TabsContent value="timeline">
@@ -272,11 +337,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <div className="space-y-6">
             {/* Investment Panel */}
             <InvestPanel
-              projectId={project.projectId}
-              minTicket={project.minTicket}
-              currency={project.proyecto.moneda}
-              estado={project.estado}
-              kycStatus="APROBADO" // Mock KYC status
+              projectId={project.id}
+              certificateId={project.certificateId}
+              minTicket={String(project.minTicket)}
+              currency="USDC"
+              estado={project.estado} // debe ser "RECAUDACION" para habilitar el botón
+              kycStatus="APROBADO" // mock; en real usar hook de KYC
+              addresses={addresses}
             />
 
             {/* My Contributions */}
@@ -288,5 +355,5 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
