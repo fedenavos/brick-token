@@ -374,7 +374,7 @@ export function useUserRole(address?: string) {
 // Network Validation Hook
 export function useNetworkValidation() {
   const targetChainId = Number.parseInt(
-    process.env.NEXT_PUBLIC_CHAIN_ID || "137"
+    process.env.NEXT_PUBLIC_CHAIN_ID || "11155111"
   );
 
   return {
@@ -387,6 +387,7 @@ export function useNetworkValidation() {
         137: "Polygon",
         8453: "Base",
         42161: "Arbitrum",
+        11155111: "Sepolia",
       };
       return networks[chainId] || `Chain ${chainId}`;
     },
