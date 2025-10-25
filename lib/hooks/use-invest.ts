@@ -1,14 +1,19 @@
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 import { BrowserProvider, Contract, parseUnits } from "ethers";
 import { useMutation } from "@tanstack/react-query";
 
-// Reemplaza estos imports con tus rutas reales de ABIs / helpers
-import CoreABI from "@/contracts/abis/Core.json";
-import ERC20ABI from "@/contracts/abis/ERC20.json";
-import IdentityRegistryABI from "@/contracts/abis/IdentityRegistry.json";
+import CoreABI from "../contracts/abis/Core.json";
+import ERC20ABI from "../contracts/abis/ERC20.json";
+import IdentityRegistryABI from "../contracts/abis/IdentityRegistry.json";
 
 export type InvestArgs = {
-  campaignId: string | number | bigint; // == projectId en tu UI
-  amount: string; // en unidades humanas ("1234.56")
+  campaignId: string | number | bigint;
+  amount: string;
   addresses: {
     core: `0x${string}`;
     usdt: `0x${string}`;
@@ -21,49 +26,29 @@ export type InvestResult = {
   contributeTxHash: string;
 };
 
-function invariant(cond: any, msg: string): asserts cond {
-  if (!cond) throw new Error(msg);
-}
-
-async function ensureProviderAndSigner() {
-  invariant(
-    typeof window !== "undefined" && (window as any).ethereum,
-    "No se detectó un proveedor EVM; instala o abre tu wallet."
-  );
-  const provider = new BrowserProvider((window as any).ethereum);
+async function getProviderAndSigner() {
+  if (!window.ethereum) {
+    throw new Error("No Ethereum provider found");
+  }
+  const provider = new BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
   const account = await signer.getAddress();
   return { provider, signer, account };
 }
 
-async function checkKyc(
-  identityRegistryAddr: string,
-  account: string,
-  provider: any
-) {
-  const identity = new Contract(
-    identityRegistryAddr,
-    IdentityRegistryABI,
-    provider
-  );
-  const isVerified: boolean = await identity.isVerified(account);
-  invariant(
-    isVerified,
-    "KYC no verificado on-chain (IdentityRegistry.isVerified = false)"
-  );
-}
-
-async function maybeApprove(
-  usdt: Contract,
+async function approveIfNeeded(
+  tokenContract: Contract,
   owner: string,
   spender: string,
   amount: bigint
-) {
-  const allowance: bigint = await usdt.allowance(owner, spender);
-  if (allowance >= amount) return undefined; // ya alcanza
-  const tx = await usdt.approve(spender, amount);
+): Promise<string | undefined> {
+  const allowance = await tokenContract.allowance(owner, spender);
+  if (allowance.gte(amount)) {
+    return undefined;
+  }
+  const tx = await tokenContract.approve(spender, amount);
   const receipt = await tx.wait();
-  return receipt?.hash as string | undefined;
+  return receipt.transactionHash;
 }
 
 async function performInvest({
@@ -71,38 +56,25 @@ async function performInvest({
   amount,
   addresses,
 }: InvestArgs): Promise<InvestResult> {
-  const { provider, signer, account } = await ensureProviderAndSigner();
+  const { provider, signer, account } = await getProviderAndSigner();
 
-  // 1) KYC (on-chain) — defensa extra además del flag de UI
-  await checkKyc(addresses.identityRegistry, account, provider);
+  const identityRegistry = new Contract(addresses.identityRegistry, IdentityRegistryABI, provider);
+  const isVerified = await identityRegistry.isVerified(account);
+  if (!isVerified) {
+    throw new Error("User is not KYC verified");
+  }
 
-  // 2) Instancias de contratos
   const core = new Contract(addresses.core, CoreABI, signer);
   const usdt = new Contract(addresses.usdt, ERC20ABI, signer);
 
-  // 3) Decimals
-  let decimals = 6; // USDT suele ser 6; igual intentamos leerlo por si fuese mock u otro token
-  try {
-    decimals = Number(await usdt.decimals());
-  } catch {}
-
-  // 4) Parsear monto y aprobar si hace falta
+  const decimals = Number(await usdt.decimals());
   const amountInBaseUnits = parseUnits(amount, decimals);
-  const approveTxHash = await maybeApprove(
-    usdt,
-    account,
-    addresses.core,
-    amountInBaseUnits
-  );
+  const approveTxHash = await approveIfNeeded(usdt, account, addresses.core, amountInBaseUnits);
 
-  // 5) Contribute
-  const tx = await core.contribute(
-    campaignId,
-    amountInBaseUnits
-  );
+  const tx = await core.contribute(campaignId, amountInBaseUnits);
   const receipt = await tx.wait();
 
-  return { approveTxHash, contributeTxHash: receipt?.hash as string };
+  return { approveTxHash, contributeTxHash: receipt?.transactionHash as string };
 }
 
 export function useInvest() {
