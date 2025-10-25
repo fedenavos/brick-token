@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,30 @@ import {
   ipfsCidToBytes32,
   toTokenUnits,
 } from "@/lib/eth/core";
+
+type CatalogItem = {
+  id: string;
+  nombre: string;
+};
+
+async function saveToBackend(payload: any) {
+  const res = await fetch("/api/projects", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(
+      errorData?.error || `Backend error (${res.status} ${res.statusText})`
+    );
+  }
+
+  return res.json();
+}
 
 export default function NewProjectPage() {
   const { userRole } = useWeb3Integration();
@@ -59,6 +83,52 @@ export default function NewProjectPage() {
     chainId: "11155111",
     contractAddress: "0xE3b14a733634682fb06b81B3a5a16E8DEF629534",
   });
+  const [emisores, setEmisores] = useState<CatalogItem[]>([]);
+  const [desarrolladores, setDesarrolladores] = useState<CatalogItem[]>([]);
+  const [auditores, setAuditores] = useState<CatalogItem[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCatalogs() {
+      try {
+        const [emisorRes, desarrolladorRes, auditorRes] = await Promise.all([
+          fetch("/api/catalog/emisores"),
+          fetch("/api/catalog/desarrolladores"),
+          fetch("/api/catalog/auditores"),
+        ]);
+
+        if (!emisorRes.ok || !desarrolladorRes.ok || !auditorRes.ok) {
+          throw new Error("Catalogo no disponible");
+        }
+
+        const [emisoresData, desarrolladoresData, auditoresData] =
+          await Promise.all([
+            emisorRes.json(),
+            desarrolladorRes.json(),
+            auditorRes.json(),
+          ]);
+
+        if (!isMounted) return;
+
+        setEmisores(Array.isArray(emisoresData) ? emisoresData : []);
+        setDesarrolladores(
+          Array.isArray(desarrolladoresData) ? desarrolladoresData : []
+        );
+        setAuditores(Array.isArray(auditoresData) ? auditoresData : []);
+      } catch (err) {
+        console.error("Error loading catalogs", err);
+        if (!isMounted) return;
+        toast.error("No se pudieron cargar los catalogos");
+      }
+    }
+
+    loadCatalogs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -69,7 +139,16 @@ export default function NewProjectPage() {
     setIsLoading(true);
 
     try {
-      // Validación de campos requeridos REALES del contrato
+      if (
+        !formData.emisor_id ||
+        !formData.desarrollador_id ||
+        !formData.auditor_id
+      ) {
+        toast.error("Debe seleccionar Emisor, Desarrollador y Auditor");
+        setIsLoading(false);
+        return;
+      }
+
       const requiredBlockchainFields = [
         "ipfs_hash",
         "monto_total",
@@ -85,7 +164,6 @@ export default function NewProjectPage() {
         return;
       }
 
-      // Validaciones
       const montoTotal = Number(formData.monto_total);
 
       if (montoTotal <= 0) {
@@ -94,15 +172,12 @@ export default function NewProjectPage() {
         return;
       }
 
-      // Conectar al contrato Core
       toast.loading("Conectando al contrato...");
       const core = await getCoreContract(formData.contractAddress);
 
-      // Preparar parámetros para createCampaign (SOLO 4 PARÁMETROS)
       const ipfsHashBytes32 = ipfsCidToBytes32(formData.ipfs_hash);
-      const goalInTokenUnits = toTokenUnits(montoTotal, 6); // 6 decimales para USDC/USDT
+      const goalInTokenUnits = toTokenUnits(montoTotal, 6);
 
-      // Calcular timestamps
       const now = Math.floor(Date.now() / 1000);
       const startsAtDays = Number(formData.starts_at_days) || 1;
       const durationDays = Number(formData.duration_days) || 30;
@@ -112,31 +187,29 @@ export default function NewProjectPage() {
       toast.dismiss();
       toast.loading("Creando campaña en blockchain...");
 
-      // Llamar a createCampaign con los 4 parámetros correctos
       const tx = await core.createCampaign(
-        ipfsHashBytes32, // bytes32 _ipfsHash
-        goalInTokenUnits, // uint _goal
-        startsAt, // uint _startsAt
-        endsAt // uint _endsAt
+        ipfsHashBytes32,
+        goalInTokenUnits,
+        startsAt,
+        endsAt
       );
 
       const receipt = await tx.wait();
 
-      // Obtener el ID de la campaña del evento
       const campaignCreatedEvent = receipt.events?.find(
         (e: any) => e.event === "CampaignCreated"
       );
-      const campaignId = campaignCreatedEvent?.args?.campaignId;
+      const campaignId =
+        campaignCreatedEvent?.args?.campaignId?.toString?.() ??
+        campaignCreatedEvent?.args?.campaignId ??
+        null;
+
+      console.log(receipt);
 
       toast.dismiss();
-      toast.success(
-        `Campaña ${campaignId} creada! Tx: ${receipt.transactionHash.slice(
-          0,
-          10
-        )}...`
-      );
+      toast.success(`Campaña ${campaignId} creada! Tx: ${receipt.transactionHash}
+        `);
 
-      // Si hay un certificado ID, asignarlo
       if (formData.certificate_id && campaignId) {
         try {
           toast.loading("Asignando certificado...");
@@ -154,12 +227,56 @@ export default function NewProjectPage() {
         }
       }
 
-      // Guardar datos adicionales en backend si es necesario
-      // await saveToBackend({ ...formData, campaignId, txHash: receipt.transactionHash })
+      // ==== ACA GUARDAMOS EN DB ====
+      try {
+        toast.loading("Guardando proyecto en base de datos...");
 
-      setTimeout(() => {
-        router.push("/admin/projects");
-      }, 2000);
+        const payload = {
+          descripcion: formData.descripcion,
+          direccion: formData.direccion,
+          organizador: formData.organizador,
+          rentabilidad_esperada: formData.rentabilidad_esperada,
+          renta_garantizada: formData.renta_garantizada,
+          plazo_renta: formData.plazo_renta,
+          estado_actual_obra: formData.estado_actual_obra,
+          media_urls: [],
+
+          emisor_id: formData.emisor_id || null,
+          desarrollador_id: formData.desarrollador_id || null,
+          auditor_id: formData.auditor_id || null,
+          chain_id: Number(formData.chainId),
+          contract_address: formData.contractAddress,
+          moneda: formData.moneda,
+          monto_total: Number(formData.monto_total),
+          monto_minimo: Number(formData.monto_minimo || 0),
+          ticket_minimo: Number(formData.ticket_minimo || 0),
+          approval_policy: formData.approvalPolicy || "EMISOR+AUDITOR",
+          raised: 0,
+          name:
+            formData.descripcion?.slice(0, 100) ||
+            formData.organizador ||
+            "Nuevo Proyecto",
+
+          // Metadata que quizás quieras agregar a la tabla más adelante:
+          // campaign_id_onchain: campaignId,
+          // tx_hash: receipt.transactionHash,
+          // ipfs_cid: formData.ipfs_hash,
+        };
+
+        const dbRes = await saveToBackend(payload);
+
+        console.log("Proyecto guardado en DB:", dbRes);
+
+        toast.dismiss();
+        toast.success("Proyecto guardado en la base de datos");
+      } catch (dbErr: any) {
+        console.error("Error guardando en DB:", dbErr);
+        toast.dismiss();
+        toast.error("Se creó on-chain pero falló guardado en base de datos");
+      }
+      // ==== FIN GUARDADO DB ====
+
+      router.push("/admin/projects");
     } catch (error: any) {
       console.error("Error:", error);
       toast.dismiss();
@@ -517,9 +634,17 @@ export default function NewProjectPage() {
                         <SelectValue placeholder="Seleccionar" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="emisor-001">
-                          BrickChain Capital
-                        </SelectItem>
+                        {emisores.length > 0 ? (
+                          emisores.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.nombre}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-emisores" disabled>
+                            No hay emisores disponibles
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -535,12 +660,17 @@ export default function NewProjectPage() {
                         <SelectValue placeholder="Seleccionar" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="dev-001">
-                          Constructora Premium SA
-                        </SelectItem>
-                        <SelectItem value="dev-002">
-                          Desarrollos Urbanos SRL
-                        </SelectItem>
+                        {desarrolladores.length > 0 ? (
+                          desarrolladores.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.nombre}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-desarrolladores" disabled>
+                            No hay desarrolladores disponibles
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -556,9 +686,17 @@ export default function NewProjectPage() {
                         <SelectValue placeholder="Seleccionar" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="audit-001">
-                          PropTech Auditors
-                        </SelectItem>
+                        {auditores.length > 0 ? (
+                          auditores.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.nombre}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-auditores" disabled>
+                            No hay auditores disponibles
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
