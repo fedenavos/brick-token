@@ -7,9 +7,9 @@ declare global {
 import { BrowserProvider, Contract, parseUnits } from "ethers";
 import { useMutation } from "@tanstack/react-query";
 
-import CoreABI from "../contracts/abis/Core.json";
-import ERC20ABI from "../contracts/abis/ERC20.json";
-import IdentityRegistryABI from "../contracts/abis/IdentityRegistry.json";
+import CoreABI from "../../contracts/abis/Core.json";
+import ERC20ABI from "../../contracts/abis/mUSDT.json";
+import IdentityRegistryABI from "../../contracts/abis/IdentityRegistry.json";
 
 export type InvestArgs = {
   campaignId: string | number | bigint;
