@@ -8,7 +8,6 @@ import IdentityRegistryABI from "@/contracts/abis/IdentityRegistry.json";
 
 export type InvestArgs = {
   campaignId: string | number | bigint; // == projectId en tu UI
-  certificateId: string | number | bigint; // requerido por Core.contribute
   amount: string; // en unidades humanas ("1234.56")
   addresses: {
     core: `0x${string}`;
@@ -69,7 +68,6 @@ async function maybeApprove(
 
 async function performInvest({
   campaignId,
-  certificateId,
   amount,
   addresses,
 }: InvestArgs): Promise<InvestResult> {
@@ -100,7 +98,6 @@ async function performInvest({
   // 5) Contribute
   const tx = await core.contribute(
     campaignId,
-    certificateId,
     amountInBaseUnits
   );
   const receipt = await tx.wait();
