@@ -81,7 +81,7 @@ export default function NewProjectPage() {
     ticket_minimo: "",
     approvalPolicy: "",
     chainId: "11155111",
-    contractAddress: "0xE3b14a733634682fb06b81B3a5a16E8DEF629534",
+    contractAddress: "0x8424f5bE942050Ce9cF9c0B00ED55B27e14F6874",
   });
   const [emisores, setEmisores] = useState<CatalogItem[]>([]);
   const [desarrolladores, setDesarrolladores] = useState<CatalogItem[]>([]);
