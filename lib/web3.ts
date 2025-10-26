@@ -28,8 +28,8 @@ const PROJECT_REGISTRY_ABI = [
 // Environment configuration
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 const CONTRACT_ADDRESS =
-  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
-  "0xE3b14a733634682fb06b81B3a5a16E8DEF629534";
+  process.env.NEXT_PUBLIC_CORE_CONTRACT_ADDRESS ||
+  "0x8424f5bE942050Ce9cF9c0B00ED55B27e14F6874";
 
 const contract = getContract({
   client,
