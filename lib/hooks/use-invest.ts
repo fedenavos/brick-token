@@ -9,7 +9,6 @@ import { useMutation } from "@tanstack/react-query";
 
 import CoreABI from "../contracts/abis/Core.json";
 import ERC20ABI from "../contracts/abis/ERC20.json";
-import IdentityRegistryABI from "../contracts/abis/IdentityRegistry.json";
 
 export type InvestArgs = {
   campaignId: string | number | bigint;
@@ -17,7 +16,6 @@ export type InvestArgs = {
   addresses: {
     core: `0x${string}`;
     usdt: `0x${string}`;
-    identityRegistry: `0x${string}`;
   };
 };
 
@@ -42,10 +40,12 @@ async function approveIfNeeded(
   spender: string,
   amount: bigint
 ): Promise<string | undefined> {
-  const allowance = await tokenContract.allowance(owner, spender);
-  if (allowance.gte(amount)) {
+  const allowance: bigint = await tokenContract.allowance(owner, spender);
+  console.log(allowance, amount);
+  if (allowance >= amount) {
     return undefined;
   }
+
   const tx = await tokenContract.approve(spender, amount);
   const receipt = await tx.wait();
   return receipt.transactionHash;
@@ -58,23 +58,38 @@ async function performInvest({
 }: InvestArgs): Promise<InvestResult> {
   const { provider, signer, account } = await getProviderAndSigner();
 
-  const identityRegistry = new Contract(addresses.identityRegistry, IdentityRegistryABI, provider);
-  const isVerified = await identityRegistry.isVerified(account);
-  if (!isVerified) {
-    throw new Error("User is not KYC verified");
-  }
+  console.log("addresses:", addresses);
 
-  const core = new Contract(addresses.core, CoreABI, signer);
-  const usdt = new Contract(addresses.usdt, ERC20ABI, signer);
+  const core = new Contract(addresses.core, CoreABI.abi ?? CoreABI, signer);
+  const usdt = new Contract(addresses.usdt, ERC20ABI.abi ?? ERC20ABI, signer);
 
   const decimals = Number(await usdt.decimals());
   const amountInBaseUnits = parseUnits(amount, decimals);
-  const approveTxHash = await approveIfNeeded(usdt, account, addresses.core, amountInBaseUnits);
+
+  const approveTxHash = await approveIfNeeded(
+    usdt,
+    account,
+    addresses.core,
+    amountInBaseUnits
+  );
+  console.log("approveTxHash:", approveTxHash);
+
+  if (!core.contribute) {
+    throw new Error(
+      "El método 'contribute' no existe en el contrato Core. Revisá el ABI importado."
+    );
+  }
 
   const tx = await core.contribute(campaignId, amountInBaseUnits);
-  const receipt = await tx.wait();
+  console.log("tx:", tx);
 
-  return { approveTxHash, contributeTxHash: receipt?.transactionHash as string };
+  const receipt = await tx.wait();
+  console.log("receipt:", receipt);
+
+  return {
+    approveTxHash,
+    contributeTxHash: receipt?.transactionHash as string,
+  };
 }
 
 export function useInvest() {

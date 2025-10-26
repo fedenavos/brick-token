@@ -24,9 +24,8 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { data: project, isLoading, error } = useProject(projectId);
 
   const addresses = {
-    core: "0xCoreContract..." as `0x${string}`,
-    usdt: "0xUsdtToken..." as `0x${string}`,
-    identityRegistry: "0xIdentityRegistry..." as `0x${string}`,
+    core: process.env.NEXT_PUBLIC_CORE_CONTRACT_ADDRESS as `0x${string}`,
+    usdt: "0xe6a583AAcdDA1AD92F88C7fC564B6E594bf8c6F5" as `0x${string}`,
   };
 
   if (isLoading) {

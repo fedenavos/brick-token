@@ -28,7 +28,6 @@ interface InvestPanelProps {
   addresses: {
     core: `0x${string}`;
     usdt: `0x${string}`;
-    identityRegistry: `0x${string}`;
   };
 }
 
