@@ -181,9 +181,17 @@ export default function NewProjectPage() {
       const goalInTokenUnits = toTokenUnits(montoTotal, 6);
 
       const now = Math.floor(Date.now() / 1000);
-      const startsAtDays = Number(formData.starts_at_days) || 1;
-      const durationDays = Number(formData.duration_days) || 30;
-      const startsAt = now + startsAtDays * 24 * 60 * 60;
+      const parsedStartsAtDays = Number(formData.starts_at_days);
+      const startsAtDays =
+        Number.isFinite(parsedStartsAtDays) && parsedStartsAtDays >= 0
+          ? parsedStartsAtDays
+          : 1;
+      const parsedDurationDays = Number(formData.duration_days);
+      const durationDays =
+        Number.isFinite(parsedDurationDays) && parsedDurationDays > 0
+          ? parsedDurationDays
+          : 30;
+      const startsAt = now + startsAtDays * 24 * 60 * 60 + 5 * 60; // Added 5 minutes (5 * 60 seconds)
       const endsAt = startsAt + durationDays * 24 * 60 * 60;
 
       toast.dismiss();
