@@ -1,11 +1,14 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
+import { type NextRequest, NextResponse } from "next/server";
+import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!);
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const projectId = params.id
+    const projectId = params.id;
 
     // Get main project data with related entities
     const [projectData] = await sql`
@@ -25,10 +28,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       LEFT JOIN aportes a ON p.id = a.proyecto_id AND a.estado = 'CONFIRMADO'
       WHERE p.id = ${projectId}
       GROUP BY p.id, pd.id, e.id, d.id, au.id
-    `
+    `;
 
     if (!projectData) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
     // Get milestones
@@ -36,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       SELECT * FROM hitos 
       WHERE proyecto_id = ${projectId}
       ORDER BY nro_hito ASC
-    `
+    `;
 
     // Get recent events (approvals and disbursements)
     const events = await sql`
@@ -66,12 +69,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       
       ORDER BY date DESC
       LIMIT 10
-    `
+    `;
 
     const project = {
       projectId: projectData.id,
       name: projectData.descripcion,
-      coverUrl: projectData.media_urls?.[0] || "/placeholder.svg?height=300&width=400",
+      coverUrl:
+        projectData.media_urls?.[0] || "/placeholder.svg?height=300&width=400",
       city: projectData.direccion,
       estado: projectData.estado,
       softCap: projectData.monto_minimo.toString(),
@@ -81,6 +85,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       roiEst: projectData.rentabilidad_esperada,
       chainId: projectData.chain_id,
       contractAddress: projectData.contract_address,
+      campaignId: projectData.campaign_id,
       descripcion: {
         id: projectData.proyecto_descripcion_id,
         descripcion: projectData.descripcion,
@@ -144,11 +149,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         txHash: event.tx_hash,
         milestoneNumber: event.milestone_number,
       })),
-    }
+    };
 
-    return NextResponse.json(project)
+    return NextResponse.json(project);
   } catch (error) {
-    console.error("Error fetching project:", error)
-    return NextResponse.json({ error: "Failed to fetch project" }, { status: 500 })
+    console.error("Error fetching project:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch project" },
+      { status: 500 }
+    );
   }
 }

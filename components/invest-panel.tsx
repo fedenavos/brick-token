@@ -20,7 +20,7 @@ import { useInvest } from "@/lib/hooks/use-invest";
 
 interface InvestPanelProps {
   projectId: string; // == campaignId en Core
-  certificateId: string; // NUEVO: requerido por core.contribute
+  campaignId: number;
   minTicket: string; // en unidades humanas ("100.00")
   currency: string; // ej. "USDT"
   estado: string; // debe ser "RECAUDACION" (Core.STATUS.COLLECTING)
@@ -33,7 +33,7 @@ interface InvestPanelProps {
 
 export function InvestPanel({
   projectId,
-  certificateId,
+  campaignId,
   minTicket,
   currency,
   estado,
@@ -62,9 +62,8 @@ export function InvestPanel({
 
     try {
       await investMutation.mutateAsync({
-        campaignId: projectId,
-        certificateId,
-        amount, // string humano; el hook convierte a base units (lee decimals del token)
+        campaignId: campaignId,
+        amount,
         addresses,
       });
       setAmount("");

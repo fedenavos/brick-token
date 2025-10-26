@@ -337,7 +337,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             {/* Investment Panel */}
             <InvestPanel
               projectId={project.id}
-              certificateId={project.certificateId}
+              campaignId={project.campaignId}
               minTicket={String(project.minTicket)}
               currency="USDC"
               estado={project.estado} // debe ser "RECAUDACION" para habilitar el botón
