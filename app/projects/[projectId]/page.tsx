@@ -339,7 +339,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               projectId={project.id}
               campaignId={project.campaignId}
               minTicket={String(project.minTicket)}
-              currency="USDC"
+              currency="USDT"
               estado={project.estado} // debe ser "RECAUDACION" para habilitar el botón
               kycStatus="APROBADO" // mock; en real usar hook de KYC
               addresses={addresses}
@@ -348,7 +348,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             {/* My Contributions */}
             <MyContributions
               projectId={project.projectId}
-              userAddress="0x5555666677778888555566667777888855556666" // Mock user address
+              userAddress="0xEA291d30d8CC9D9f113BA5bd99966228f7E8D556" // Mock user address
             />
           </div>
         </div>
