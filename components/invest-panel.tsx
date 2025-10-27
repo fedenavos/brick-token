@@ -60,16 +60,27 @@ export function InvestPanel({
   const handleInvest = async () => {
     if (!canProceed) return;
 
-    try {
-      await investMutation.mutateAsync({
-        campaignId: campaignId,
+    investMutation.mutate(
+      {
+        projectId,
+        campaignId,
         amount,
         addresses,
-      });
-      setAmount("");
-    } catch (error) {
-      console.error("[invest] error:", error);
-    }
+      },
+      {
+        onSuccess: (res) => {
+          setAmount("");
+          if (!res.aporteId) {
+            console.warn(
+              "Inversión exitosa en blockchain pero no guardada en BD:",
+              res.contributeTxHash
+            );
+          } else {
+            console.log("Inversión completada con éxito");
+          }
+        },
+      }
+    );
   };
 
   return (
@@ -225,7 +236,13 @@ export function InvestPanel({
               )}
               {investMutation.data?.contributeTxHash && (
                 <div className="truncate">
-                  Contribute hash: {investMutation.data.contributeTxHash}
+                  {/* hacer link a investMutation.data.contributeTxHash */}
+                  Contribute hash:{" "}
+                  <a
+                    href={`https://sepolia.etherscan.io/tx/${investMutation.data.contributeTxHash}`}
+                  >
+                    {investMutation.data.contributeTxHash.slice(0, 10)}...
+                  </a>
                 </div>
               )}
             </AlertDescription>

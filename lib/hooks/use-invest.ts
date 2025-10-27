@@ -4,15 +4,16 @@ declare global {
   }
 }
 
-import { BrowserProvider, Contract, parseUnits, type BigNumberish } from "ethers";
+import { BrowserProvider, Contract, parseUnits } from "ethers";
 import { useMutation } from "@tanstack/react-query";
 
 import CoreABI from "../contracts/abis/Core.json";
 import ERC20ABI from "../contracts/abis/ERC20.json";
 
 export type InvestArgs = {
+  projectId: string | number;
   campaignId: string | number | bigint;
-  amount: string; // siempre string para parseUnits
+  amount: string;
   addresses: {
     core: `0x${string}`;
     usdt: `0x${string}`;
@@ -22,19 +23,19 @@ export type InvestArgs = {
 export type InvestResult = {
   approveTxHash?: string;
   contributeTxHash: string;
+  aporteId?: number;
 };
 
 async function getProviderAndSigner() {
-  if (!window.ethereum) throw new Error("No Ethereum provider found");
+  if (!window.ethereum) {
+    throw new Error("No Ethereum provider found");
+  }
   const provider = new BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
   const account = await signer.getAddress();
   return { provider, signer, account };
 }
 
-/**
- * Aprueba si allowance es insuficiente
- */
 async function approveIfNeeded(
   tokenContract: Contract,
   owner: string,
@@ -42,53 +43,86 @@ async function approveIfNeeded(
   amount: bigint
 ): Promise<string | undefined> {
   const allowance: bigint = await tokenContract.allowance(owner, spender);
-  console.log("[DEBUG] Allowance actual:", allowance.toString(), "Amount requerido:", amount.toString());
+  if (allowance >= amount) {
+    return undefined;
+  }
 
-  if (allowance >= amount) return undefined;
-
-  console.log("[DEBUG] Enviando approve...");
   const tx = await tokenContract.approve(spender, amount);
   const receipt = await tx.wait();
-  console.log("[DEBUG] Approve completado, txHash:", receipt.transactionHash);
   return receipt.transactionHash;
 }
 
-/**
- * Invierte asegurando decimales correctos
- */
 async function performInvest({
+  projectId,
   campaignId,
   amount,
   addresses,
 }: InvestArgs): Promise<InvestResult> {
-  const { provider, signer, account } = await getProviderAndSigner();
+  const { signer, account } = await getProviderAndSigner();
 
   const core = new Contract(addresses.core, CoreABI.abi ?? CoreABI, signer);
   const usdt = new Contract(addresses.usdt, ERC20ABI.abi ?? ERC20ABI, signer);
 
-  // Leer decimales reales del token
-  const decimals = await usdt.decimals();
-  console.log("[DEBUG] Token decimals:", decimals);
+  const decimals = Number(await usdt.decimals());
+  const amountInBaseUnits = parseUnits(amount, decimals);
 
-  // Convertir amount de UI a base units según decimals reales
-  const amountInBaseUnits: bigint = parseUnits(amount, decimals);
-  console.log("[DEBUG] Amount en base units:", amountInBaseUnits.toString());
+  const approveTxHash = await approveIfNeeded(
+    usdt,
+    account,
+    addresses.core,
+    amountInBaseUnits
+  );
 
-  // Aprobar si es necesario
-  const approveTxHash = await approveIfNeeded(usdt, account, addresses.core, amountInBaseUnits);
-  console.log("[DEBUG] approveTxHash:", approveTxHash ?? "No se necesitó approve");
-
-  if (typeof core.contribute !== "function") throw new Error("core.contribute no existe en ABI");
+  if (!core.contribute) {
+    throw new Error(
+      "El método 'contribute' no existe en el contrato Core. Revisá el ABI importado."
+    );
+  }
 
   const tx = await core.contribute(campaignId, amountInBaseUnits);
-  console.log("[DEBUG] Transacción enviada:", tx);
-
   const receipt = await tx.wait();
-  console.log("[DEBUG] Receipt:", receipt);
 
-  return { approveTxHash, contributeTxHash: receipt.transactionHash };
+  const contributeTxHash = receipt?.hash ?? receipt?.transactionHash;
+
+  let aporteId: number | undefined = undefined;
+
+  try {
+    const res = await fetch("/api/investments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        investorAddress: account,
+        projectId: projectId,
+        amount: amount,
+        txHash: contributeTxHash,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      aporteId = data.id;
+    } else {
+      console.error(
+        "DB insert failed while recording aporte:",
+        await res.text()
+      );
+    }
+  } catch (err) {
+    console.error("Request to /api/aportes failed:", err);
+  }
+
+  return {
+    approveTxHash,
+    contributeTxHash,
+    aporteId,
+  };
 }
 
 export function useInvest() {
-  return useMutation({ mutationKey: ["invest"], mutationFn: (args: InvestArgs) => performInvest(args) });
+  return useMutation({
+    mutationKey: ["invest"],
+    mutationFn: (args: InvestArgs) => performInvest(args),
+  });
 }
