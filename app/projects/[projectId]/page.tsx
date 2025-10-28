@@ -336,10 +336,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <div className="space-y-6">
             {/* Investment Panel */}
             <InvestPanel
-              projectId={project.id}
+              projectId={projectId}
               campaignId={project.campaignId}
               minTicket={String(project.minTicket)}
-              currency="USDT"
+              currency="mUSDT"
               estado={project.estado} // debe ser "RECAUDACION" para habilitar el botón
               kycStatus="APROBADO" // mock; en real usar hook de KYC
               addresses={addresses}

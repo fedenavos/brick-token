@@ -457,7 +457,7 @@ export default function NewProjectPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="USDT">USDT</SelectItem>
+                        <SelectItem value="mUSDT">mUSDT</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

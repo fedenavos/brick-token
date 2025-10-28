@@ -16,7 +16,7 @@ const mockContributions = [
   {
     id: "aporte-001",
     monto: "100",
-    moneda: "USDT",
+    moneda: "mUSDT",
     tx_hash: "0x1111222233334444111122223333444411112222",
     fecha: "2024-02-01T12:00:00Z",
     estado: "CONFIRMADO" as const,
@@ -24,7 +24,7 @@ const mockContributions = [
   // {
   //   id: "aporte-002",
   //   monto: "2500",
-  //   moneda: "USDT",
+  //   moneda: "mUSDT",
   //   tx_hash: "0x2222333344445555222233334444555522223333",
   //   fecha: "2024-02-15T15:30:00Z",
   //   estado: "CONFIRMADO" as const,
@@ -101,7 +101,7 @@ export function MyContributions({
         <div className="text-sm text-muted-foreground">
           Total invertido:{" "}
           <span className="font-semibold text-primary">
-            ${totalInvested.toLocaleString()} USDT
+            ${totalInvested.toLocaleString()} mUSDT
           </span>
         </div>
       </CardHeader>
@@ -175,7 +175,7 @@ export function MyContributions({
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Monto total:</span>
                 <span className="font-semibold text-primary">
-                  ${totalInvested.toLocaleString()} USDT
+                  ${totalInvested.toLocaleString()} mUSDT
                 </span>
               </div>
             </div>

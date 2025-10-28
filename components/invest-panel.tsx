@@ -22,7 +22,7 @@ interface InvestPanelProps {
   projectId: string; // == campaignId en Core
   campaignId: number;
   minTicket: string; // en unidades humanas ("100.00")
-  currency: string; // ej. "USDT"
+  currency: string; // ej. "mUSDT"
   estado: string; // debe ser "RECAUDACION" (Core.STATUS.COLLECTING)
   kycStatus?: string; // "APROBADO"/"PENDIENTE"/etc.
   addresses: {
